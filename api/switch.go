@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/muka/go-bluetooth/linux"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
 )
 
 var rfclass = [...]string{

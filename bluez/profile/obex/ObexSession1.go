@@ -1,8 +1,8 @@
 package obex
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
 )
 
 // NewObexSession1 create a new ObexSession1 client

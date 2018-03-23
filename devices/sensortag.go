@@ -7,9 +7,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/bluez/profile"
-	"github.com/muka/go-bluetooth/emitter"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
 )
 
 // DefaultRetry times

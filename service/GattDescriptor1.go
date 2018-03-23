@@ -4,8 +4,8 @@ import (
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"
-	"github.com/muka/go-bluetooth/bluez"
-	"github.com/muka/go-bluetooth/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
 )
 
 // NewGattDescriptor1 create a new GattDescriptor1 client

@@ -6,8 +6,8 @@ import (
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"
-	"github.com/muka/go-bluetooth/bluez"
-	"github.com/muka/go-bluetooth/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
 )
 
 // NewGattService1 create a new instance of GattService1

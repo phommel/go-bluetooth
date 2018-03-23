@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile/obex"
 	log "github.com/Sirupsen/logrus"
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/bluez/profile/obex"
 )
 
 func main() {

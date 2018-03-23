@@ -4,8 +4,8 @@ package main
 import (
 	"os"
 
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
 	log "github.com/Sirupsen/logrus"
-	"github.com/muka/go-bluetooth/linux"
 )
 
 func main() {

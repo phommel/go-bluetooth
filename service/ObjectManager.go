@@ -5,7 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
 )
 
 // NewObjectManager create a new instance

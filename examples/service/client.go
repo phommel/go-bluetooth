@@ -1,11 +1,11 @@
 package main
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
 	log "github.com/Sirupsen/logrus"
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/bluez/profile"
-	"github.com/muka/go-bluetooth/emitter"
-	"github.com/muka/go-bluetooth/linux"
 )
 
 func createClient(adapterID, name, path string) error {

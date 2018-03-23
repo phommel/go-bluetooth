@@ -3,8 +3,8 @@ package main
 import (
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/devices"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/devices"
 )
 
 // example of reading temperature from a TI sensortag

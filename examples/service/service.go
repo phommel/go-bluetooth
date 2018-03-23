@@ -1,13 +1,13 @@
 package main
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/service"
 	log "github.com/Sirupsen/logrus"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/bluez"
-	"github.com/muka/go-bluetooth/bluez/profile"
-	"github.com/muka/go-bluetooth/linux"
-	"github.com/muka/go-bluetooth/service"
 )
 
 func setupAdapter(aid string) error {

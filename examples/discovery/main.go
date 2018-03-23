@@ -4,10 +4,10 @@ package main
 import (
 	"os"
 
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
 	log "github.com/Sirupsen/logrus"
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/emitter"
-	"github.com/muka/go-bluetooth/linux"
 )
 
 const logLevel = log.DebugLevel

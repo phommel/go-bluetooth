@@ -15,10 +15,10 @@ import (
 	"os"
 	"time"
 
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/devices"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
 	log "github.com/Sirupsen/logrus"
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/devices"
-	"github.com/muka/go-bluetooth/emitter"
 )
 
 var adapterID = "hci0"

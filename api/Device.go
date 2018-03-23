@@ -6,11 +6,11 @@ import (
 	"reflect"
 	"strings"
 
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/util"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
-	"github.com/muka/go-bluetooth/bluez/profile"
-	"github.com/muka/go-bluetooth/emitter"
-	"github.com/muka/go-bluetooth/util"
 )
 
 var deviceRegistry = make(map[string]*Device)
