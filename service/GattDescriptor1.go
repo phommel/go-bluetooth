@@ -1,11 +1,11 @@
 package service
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
 )
 
 // NewGattDescriptor1 create a new GattDescriptor1 client

@@ -7,7 +7,7 @@ import (
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const logLevel = log.DebugLevel

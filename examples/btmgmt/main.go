@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

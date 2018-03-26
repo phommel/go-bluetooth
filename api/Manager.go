@@ -7,7 +7,7 @@ import (
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/util"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/godbus/dbus"
 )
 

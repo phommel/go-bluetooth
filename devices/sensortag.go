@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/godbus/dbus"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"

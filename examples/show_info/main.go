@@ -7,7 +7,7 @@ import (
 
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 //ShowInfoExample show informations for hardcoded MiBand2 on hci0

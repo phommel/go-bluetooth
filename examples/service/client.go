@@ -5,7 +5,7 @@ import (
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func createClient(adapterID, name, path string) error {

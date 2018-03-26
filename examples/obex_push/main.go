@@ -17,7 +17,7 @@ import (
 
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile/obex"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

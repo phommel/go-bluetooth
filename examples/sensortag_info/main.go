@@ -18,7 +18,7 @@ import (
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/devices"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var adapterID = "hci0"
