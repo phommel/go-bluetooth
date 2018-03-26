@@ -71,7 +71,7 @@ func ClearDevices() error {
 		return err
 	}
 	for _, dev := range devices {
-		err := ClearDevice(&dev)
+		err := ClearDevice(dev)
 		if err != nil {
 			return err
 		}
