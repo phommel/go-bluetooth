@@ -98,6 +98,9 @@ func ParseDevice(path dbus.ObjectPath, propsMap map[string]dbus.Variant) (*Devic
 }
 
 func (d *Device) watchProperties() error {
+	if d.watchPropertiesChannel != nil {
+		d.unwatchProperties()
+	}
 
 	channel, err := d.client.Register()
 	if err != nil {
@@ -165,8 +168,13 @@ type Device struct {
 }
 
 func (d *Device) unwatchProperties() error {
-	err := d.client.Unregister(d.watchPropertiesChannel)
-	close(d.watchPropertiesChannel)
+	var err error
+	if d.watchPropertiesChannel != nil {
+		err = d.client.Unregister(d.watchPropertiesChannel)
+		close(d.watchPropertiesChannel)
+		d.watchPropertiesChannel = nil
+	}
+
 	return err
 }
 
@@ -400,6 +408,9 @@ func (d *Device) Disconnect() error {
 		return err
 	}
 	c.Disconnect()
+	if d.watchPropertiesChannel != nil {
+		d.unwatchProperties()
+	}
 	return nil
 }
 
