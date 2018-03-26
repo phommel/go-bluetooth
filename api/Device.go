@@ -82,8 +82,7 @@ func ClearDevices() error {
 // ParseDevice parse a Device from a ObjectManager map
 func ParseDevice(path dbus.ObjectPath, propsMap map[string]dbus.Variant) (*Device, error) {
 
-	d := new(Device)
-	d.Path = string(path)
+	d := NewDevice(string(path))
 	d.client = profile.NewDevice1(d.Path)
 
 	props := new(profile.Device1Properties)
