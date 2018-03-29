@@ -34,6 +34,7 @@ type GattService1Properties struct {
 	Device          dbus.ObjectPath
 	Characteristics []dbus.ObjectPath `dbus:"emit"`
 	UUID            string
+	Includes        []dbus.ObjectPath `dbus:"emit"`
 }
 
 //ToMap serialize a properties struct to a map
