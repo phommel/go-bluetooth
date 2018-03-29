@@ -7,8 +7,8 @@ import (
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/util"
-	log "github.com/sirupsen/logrus"
 	"github.com/godbus/dbus"
+	log "github.com/sirupsen/logrus"
 )
 
 var manager *Manager
@@ -97,6 +97,11 @@ func (m *Manager) watchChanges() error {
 					path := v.Body[0].(dbus.ObjectPath)
 					props := v.Body[1].(map[string]map[string]dbus.Variant)
 
+					for propname := range props {
+						emitter.Emit("ifaceadd", []string{string(path), propname})
+						log.Debug("DBus: interface added: '" + string(path) + "' " + propname)
+					}
+
 					// keep cache up to date
 					m.objects[path] = props
 
@@ -104,9 +109,13 @@ func (m *Manager) watchChanges() error {
 				}
 			case bluez.InterfacesRemoved:
 				{
-
 					path := v.Body[0].(dbus.ObjectPath)
 					ifaces := v.Body[1].([]string)
+
+					for _, iname := range ifaces {
+						emitter.Emit("ifaceremove", []string{string(path), iname})
+						log.Debug("DBus: interface removed: '" + string(path) + "' " + iname)
+					}
 
 					// keep cache up to date
 					if _, ok := m.objects[path]; ok {
