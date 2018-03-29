@@ -90,7 +90,17 @@ func On(event string, callback *Callback) error {
 		events[event] = make([]*Callback, 0)
 	}
 
-	events[event] = append(events[event], callback)
+	found := false
+	for _, cb := range events[event] {
+		if cb == callback {
+			found = true
+			break
+		}
+	}
+	if !found {
+		events[event] = append(events[event], callback)
+	}
+
 	mutex.Unlock()
 
 	return nil
