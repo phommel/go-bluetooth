@@ -264,7 +264,7 @@ func (d *Device) Emit(name string, data interface{}) error {
 }
 
 //GetService return a GattService
-func (d *Device) GetService(path string) *profile.GattService1 {
+func (d *Device) GetService(path string) (*profile.GattService1, error) {
 	return profile.NewGattService1(path, "org.bluez")
 }
 

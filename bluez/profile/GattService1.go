@@ -7,7 +7,7 @@ import (
 )
 
 // NewGattService1 create a new GattService1 client
-func NewGattService1(path string, name string) *GattService1 {
+func NewGattService1(path string, name string) (*GattService1, error) {
 	a := new(GattService1)
 	a.client = bluez.NewClient(
 		&bluez.Config{
@@ -18,8 +18,8 @@ func NewGattService1(path string, name string) *GattService1 {
 		},
 	)
 	a.Properties = new(GattService1Properties)
-	a.GetProperties()
-	return a
+	_, err := a.GetProperties()
+	return a, err
 }
 
 // GattService1 client
