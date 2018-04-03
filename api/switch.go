@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/linux"
 )
 
 var rfclass = [...]string{

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
 	"github.com/godbus/dbus"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
 )
 
 //.....getting config,data,period characteristics for TEMPERATURE sensor............

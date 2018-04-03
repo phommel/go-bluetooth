@@ -1,7 +1,7 @@
 package bluez
 
 import (
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/util"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/util"
 	"github.com/godbus/dbus"
 )
 

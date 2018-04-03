@@ -3,9 +3,9 @@ package service
 import (
 	"errors"
 
-	log "github.com/sirupsen/logrus"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/godbus/dbus"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
+	log "github.com/sirupsen/logrus"
 )
 
 // NewObjectManager create a new instance

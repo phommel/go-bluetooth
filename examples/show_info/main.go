@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
 	log "github.com/sirupsen/logrus"
 )
 

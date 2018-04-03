@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
 	"github.com/godbus/dbus"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
+	log "github.com/sirupsen/logrus"
 )
 
 // DefaultRetry times

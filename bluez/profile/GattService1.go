@@ -1,7 +1,7 @@
 package profile
 
 import (
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/fatih/structs"
 	"github.com/godbus/dbus"
 )

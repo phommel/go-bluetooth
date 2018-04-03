@@ -3,12 +3,12 @@ package service
 import (
 	"strconv"
 
-	log "github.com/sirupsen/logrus"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
+	log "github.com/sirupsen/logrus"
 )
 
 // NewGattCharacteristic1 create a new GattCharacteristic1 client

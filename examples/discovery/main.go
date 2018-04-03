@@ -4,9 +4,9 @@ package main
 import (
 	"os"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/api"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/emitter"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/linux"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/linux"
 	log "github.com/sirupsen/logrus"
 )
 

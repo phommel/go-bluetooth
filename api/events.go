@@ -1,6 +1,6 @@
 package api
 
-import "git.enexoma.de/r/smartcontrol/libraries/go-bluetooth/bluez/profile"
+import "git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
 
 //EventStatus indicate the status related to an event
 type EventStatus int
