@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
@@ -355,7 +356,7 @@ func (d *Device) GetCharsList() ([]dbus.ObjectPath, error) {
 	}
 
 	list := manager.GetObjects()
-	for objpath := range *list {
+	for objpath := range list {
 		path := string(objpath)
 		if !strings.HasPrefix(path, d.Path) {
 			continue
@@ -394,10 +395,59 @@ func (d *Device) Connect() error {
 		return err
 	}
 
+	// initialize callback for monitoring of dbus
+	ciface := make(chan interface{})
+	cifaceCallback := emitter.NewCallback(func(ev emitter.Event) {
+		if strings.Contains(ev.GetData().([]string)[0], d.Path) {
+			go func() {
+				select {
+				case ciface <- nil:
+				case <-time.After(1 * time.Second):
+				}
+			}()
+		}
+	})
+	emitter.On("ifaceadd", cifaceCallback)
+	defer emitter.Off("ifaceadd", cifaceCallback)
+
+	// perform connect
 	err = c.Connect()
 	if err != nil {
 		return err
 	}
+
+	// check characteristics: if dbus is already filled, we do not have to wait
+	chars, _ := d.GetCharsList()
+	if len(chars) > 0 {
+		return nil
+	}
+
+	// otherwise, wait for dbus to get populated...
+	done := make(chan struct{})
+
+	go func() {
+		to := time.Now().Add(3 * time.Second)
+		for time.Now().Before(to) {
+			select {
+			case <-ciface:
+				{
+					to = time.Now().Add(250 * time.Millisecond)
+				}
+
+			case <-time.After(100 * time.Millisecond):
+			}
+		}
+		close(done)
+	}()
+
+	<-done
+
+	// if there are still no charateristics on dbus, deem this connection attempt as failed
+	chars, _ = d.GetCharsList()
+	if len(chars) == 0 {
+		return errors.New("no characteristics found")
+	}
+
 	return nil
 }
 
