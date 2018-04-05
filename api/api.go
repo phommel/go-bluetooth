@@ -50,7 +50,7 @@ func GetDevices() ([]*Device, error) {
 
 	var devices = make([]*Device, 0)
 	for _, path := range list {
-		props := (*objects)[path][bluez.Device1Interface]
+		props := (objects)[path][bluez.Device1Interface]
 		dev, err := ParseDevice(path, props)
 		if err != nil {
 			return nil, err
@@ -71,7 +71,7 @@ func GetDeviceList() ([]dbus.ObjectPath, error) {
 
 	objects := manager.GetObjects()
 	var devices []dbus.ObjectPath
-	for path, ifaces := range *objects {
+	for path, ifaces := range objects {
 		for iface := range ifaces {
 			switch iface {
 			case bluez.Device1Interface:
@@ -96,7 +96,7 @@ func AdapterExists(adapterID string) (bool, error) {
 	objects := manager.GetObjects()
 
 	path := dbus.ObjectPath("/org/bluez/" + adapterID)
-	_, exists := (*objects)[path]
+	_, exists := (objects)[path]
 
 	return exists, nil
 }

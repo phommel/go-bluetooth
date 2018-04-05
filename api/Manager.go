@@ -2,6 +2,7 @@ package api
 
 import (
 	"strings"
+	"sync"
 
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
@@ -31,6 +32,7 @@ func NewManager() (*Manager, error) {
 	m := new(Manager)
 	m.objectManager = profile.NewObjectManager("org.bluez", "/")
 	m.objects = make(map[dbus.ObjectPath]map[string]map[string]dbus.Variant)
+	m.objectsMx = &sync.Mutex{}
 
 	// watch for signaling from ObjectManager
 	m.watchChanges()
@@ -49,6 +51,7 @@ type Manager struct {
 	objectManager       *profile.ObjectManager
 	watchChangesEnabled bool
 	objects             map[dbus.ObjectPath]map[string]map[string]dbus.Variant
+	objectsMx           *sync.Mutex
 	channel             chan *dbus.Signal
 }
 
@@ -99,11 +102,13 @@ func (m *Manager) watchChanges() error {
 
 					for propname := range props {
 						emitter.Emit("ifaceadd", []string{string(path), propname})
-						log.Debug("DBus: interface added: '" + string(path) + "' " + propname)
+						//log.Debug("DBus: interface added: '" + string(path) + "' " + propname)
 					}
 
 					// keep cache up to date
+					m.objectsMx.Lock()
 					m.objects[path] = props
+					m.objectsMx.Unlock()
 
 					emitChanges(path, props)
 				}
@@ -114,12 +119,14 @@ func (m *Manager) watchChanges() error {
 
 					for _, iname := range ifaces {
 						emitter.Emit("ifaceremove", []string{string(path), iname})
-						log.Debug("DBus: interface removed: '" + string(path) + "' " + iname)
+						//log.Debug("DBus: interface removed: '" + string(path) + "' " + iname)
 					}
 
 					// keep cache up to date
 					if _, ok := m.objects[path]; ok {
+						m.objectsMx.Lock()
 						delete(m.objects, path)
+						m.objectsMx.Unlock()
 					}
 
 					for _, iF := range ifaces {
@@ -229,9 +236,11 @@ func (m *Manager) LoadObjects() error {
 	return nil
 }
 
-//GetObjects return the cached list of objects from the ObjectManager
-func (m *Manager) GetObjects() *map[dbus.ObjectPath]map[string]map[string]dbus.Variant {
-	return &m.objects
+//GetObjects returns a snaphot of the cached list of objects from the ObjectManager
+func (m *Manager) GetObjects() map[dbus.ObjectPath]map[string]map[string]dbus.Variant {
+	m.objectsMx.Lock()
+	defer m.objectsMx.Unlock()
+	return m.objects
 }
 
 //RefreshState emit local manager objects and interfaces
@@ -243,7 +252,7 @@ func (m *Manager) RefreshState() error {
 	}
 
 	objs := m.GetObjects()
-	for path, ifaces := range *objs {
+	for path, ifaces := range objs {
 		emitChanges(path, ifaces)
 	}
 
