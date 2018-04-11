@@ -240,7 +240,19 @@ func (m *Manager) LoadObjects() error {
 func (m *Manager) GetObjects() map[dbus.ObjectPath]map[string]map[string]dbus.Variant {
 	m.objectsMx.Lock()
 	defer m.objectsMx.Unlock()
-	return m.objects
+
+	// get deep copy snapshot
+	result := make(map[dbus.ObjectPath]map[string]map[string]dbus.Variant)
+	for opk := range m.objects {
+		result[opk] = make(map[string]map[string]dbus.Variant)
+		for fkey := range m.objects[opk] {
+			result[opk][fkey] = make(map[string]dbus.Variant)
+			for skey, sval := range m.objects[opk][fkey] {
+				result[opk][fkey][skey] = sval
+			}
+		}
+	}
+	return result
 }
 
 //RefreshState emit local manager objects and interfaces
