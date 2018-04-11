@@ -389,6 +389,11 @@ func (d *Device) IsConnected() bool {
 
 //Connect to device
 func (d *Device) Connect() error {
+	return d.ConnectWithDbusTimeout(2*time.Second, 250*time.Millisecond)
+}
+
+//Connect to device
+func (d *Device) ConnectWithDbusTimeout(waittime, additionaltime time.Duration) error {
 
 	c, err := d.GetClient()
 	if err != nil {
@@ -426,15 +431,15 @@ func (d *Device) Connect() error {
 	done := make(chan struct{})
 
 	go func() {
-		to := time.Now().Add(3 * time.Second)
+		to := time.Now().Add(waittime)
 		for time.Now().Before(to) {
 			select {
 			case <-ciface:
 				{
-					to = time.Now().Add(250 * time.Millisecond)
+					to = time.Now().Add(additionaltime)
 				}
 
-			case <-time.After(100 * time.Millisecond):
+			case <-time.After(50 * time.Millisecond):
 			}
 		}
 		close(done)
