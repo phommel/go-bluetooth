@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
@@ -30,6 +33,8 @@ func NewDevice(path string) *Device {
 	d.client.GetProperties()
 	d.Properties = d.client.Properties
 	d.chars = make(map[dbus.ObjectPath]*profile.GattCharacteristic1, 0)
+	d.connDissconnMutex = &sync.Mutex{}
+	d.wpcMutex = &sync.Mutex{}
 
 	deviceRegistry[path] = d
 
@@ -107,7 +112,9 @@ func (d *Device) watchProperties() error {
 	if err != nil {
 		return err
 	}
+	d.wpcMutex.Lock()
 	d.watchPropertiesChannel = channel
+	d.wpcMutex.Unlock()
 
 	go (func() {
 		for {
@@ -166,10 +173,14 @@ type Device struct {
 	client                 *profile.Device1
 	chars                  map[dbus.ObjectPath]*profile.GattCharacteristic1
 	watchPropertiesChannel chan *dbus.Signal
+	connDissconnMutex      *sync.Mutex
+	wpcMutex               *sync.Mutex
 }
 
 func (d *Device) unwatchProperties() error {
 	var err error
+	d.wpcMutex.Lock()
+	defer d.wpcMutex.Unlock()
 	if d.watchPropertiesChannel != nil {
 		err = d.client.Unregister(d.watchPropertiesChannel)
 		close(d.watchPropertiesChannel)
@@ -395,10 +406,14 @@ func (d *Device) Connect() error {
 //Connect to device
 func (d *Device) ConnectWithDbusTimeout(waittime, additionaltime time.Duration) error {
 
+	//prof := minprofile.NewStarted()
+
 	c, err := d.GetClient()
 	if err != nil {
 		return err
 	}
+
+	//prof.StepP("Device '" + d.Properties.Address + "': GetClient")
 
 	// initialize callback for monitoring of dbus
 	ciface := make(chan interface{})
@@ -415,17 +430,24 @@ func (d *Device) ConnectWithDbusTimeout(waittime, additionaltime time.Duration) 
 	emitter.On("ifaceadd", cifaceCallback)
 	defer emitter.Off("ifaceadd", cifaceCallback)
 
+	//prof.StepP("Device '" + d.Properties.Address + "': Init DBus listener")
+
 	// perform connect
 	err = c.Connect()
 	if err != nil {
 		return err
 	}
 
+	//prof.StepP("Device '" + d.Properties.Address + "': Connect")
+
 	// check characteristics: if dbus is already filled, we do not have to wait
 	chars, _ := d.GetCharsList()
 	if len(chars) > 0 {
+		//prof.StepP("Device '" + d.Properties.Address + "': GetCharsList (found)")
 		return nil
 	}
+
+	//prof.StepP("Device '" + d.Properties.Address + "': GetCharsList (not found)")
 
 	// otherwise, wait for dbus to get populated...
 	done := make(chan struct{})
@@ -447,26 +469,79 @@ func (d *Device) ConnectWithDbusTimeout(waittime, additionaltime time.Duration) 
 
 	<-done
 
+	//prof.StepP("Device '" + d.Properties.Address + "': Waiting for DBus")
+
 	// if there are still no charateristics on dbus, deem this connection attempt as failed
 	chars, _ = d.GetCharsList()
 	if len(chars) == 0 {
 		return errors.New("no characteristics found")
 	}
 
+	//prof.StepP("Device '" + d.Properties.Address + "': Second GetCharsList")
+
 	return nil
 }
 
 //Disconnect from a device
 func (d *Device) Disconnect() error {
+	d.connDissconnMutex.Lock()
+	defer d.connDissconnMutex.Unlock()
+
 	c, err := d.GetClient()
 	if err != nil {
 		return err
 	}
-	c.Disconnect()
+
+	cbChan := make(chan bool)
+	var cb *emitter.Callback
+	cb = emitter.NewCallback(func(ev emitter.Event) {
+		pc := ev.GetData().(PropertyChangedEvent)
+
+		if pc.Field == "Connected" {
+			connected := pc.Value.(bool)
+			if !connected && d.Properties.Address == pc.Device.Properties.Address {
+				d.Off("changed", cb)
+				if cb != nil {
+					cb = nil
+					close(cbChan)
+				}
+			}
+		}
+	})
+
+	d.On("changed", cb)
+
+	err = c.Disconnect()
+	if err == nil {
+		select {
+		case <-cbChan:
+			{
+				log.Info("Disconnected gracefully by event: '" + d.Properties.Address + "' (" + d.Properties.Name + ")")
+			}
+		// case discerr := <-cerr:
+		// 	{
+		// 		err = discerr
+		// 		if err == nil {
+		// 			log.Info("Disconnected gracefully by call: '" + d.Properties.Address + "' (" + d.Properties.Name + ")")
+		// 		} else {
+		// 			log.Error("Disconnect error: '" + d.Properties.Address + "' (" + d.Properties.Name + "): " + err.Error())
+		// 		}
+		// 	}
+		case <-time.After(3 * time.Second):
+			{
+				log.Error("Disconnect timeout: '" + d.Properties.Address + "' (" + d.Properties.Name + ")")
+			}
+		}
+	}
+
+	if cb != nil {
+		d.Off("changed", cb)
+	}
+
 	if d.watchPropertiesChannel != nil {
 		d.unwatchProperties()
 	}
-	return nil
+	return err
 }
 
 //Pair a device
