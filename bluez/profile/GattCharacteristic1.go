@@ -136,9 +136,9 @@ func (d *GattCharacteristic1) AcquireWrite() (dbus.UnixFD, uint16, error) {
 }
 
 //AcquireNotify acquire file descriptor and MTU for notify [experimental]
-func (d *GattCharacteristic1) AcquireNotify() (dbus.UnixFD, uint16, error) {
+func (d *GattCharacteristic1) AcquireNotify(options map[string]dbus.Variant) (dbus.UnixFD, uint16, error) {
 	var fd dbus.UnixFD
 	var mtu uint16
-	err := d.client.Call("AcquireNotify", 0).Store(&fd, &mtu)
+	err := d.client.Call("AcquireNotify", 0, options).Store(&fd, &mtu)
 	return fd, mtu, err
 }
