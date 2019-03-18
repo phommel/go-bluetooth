@@ -4,6 +4,7 @@ import (
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/godbus/dbus"
 	log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // TODO: https://github.com/blueman-project/blueman/issues/218#issuecomment-89315974

@@ -17,13 +17,13 @@ import (
 	"github.com/godbus/dbus"
 )
 
-var deviceRegistry = make(map[string]*Device)
+var deviceRegistry = new(sync.Map)
 
 // NewDevice creates a new Device
 func NewDevice(path string) *Device {
 
-	if _, ok := deviceRegistry[path]; ok {
-		return deviceRegistry[path]
+	if device, ok := deviceRegistry.Load(path); ok {
+		return device.(*Device)
 	}
 
 	d := new(Device)
@@ -33,10 +33,11 @@ func NewDevice(path string) *Device {
 	d.client.GetProperties()
 	d.Properties = d.client.Properties
 	d.chars = make(map[dbus.ObjectPath]*profile.GattCharacteristic1, 0)
+	d.descr = make(map[dbus.ObjectPath]*profile.GattDescriptor1, 0)
 	d.connDissconnMutex = &sync.Mutex{}
 	d.wpcMutex = &sync.Mutex{}
 
-	deviceRegistry[path] = d
+	deviceRegistry.Store(path, d)
 
 	// d.watchProperties()
 
@@ -63,10 +64,35 @@ func ClearDevice(d *Device) error {
 
 	c.Close()
 
-	if _, ok := deviceRegistry[d.Path]; ok {
-		delete(deviceRegistry, d.Path)
+	if _, ok := deviceRegistry.Load(d.Path); ok {
+		deviceRegistry.Delete(d.Path)
 	}
 
+	return nil
+}
+
+// FlushDevices clears removes device and clears it from cached devices
+func FlushDevices(adapterID string) error {
+	adapter, err := GetAdapter(adapterID)
+	if err != nil {
+		return err
+	}
+
+	devices, err := GetDevices()
+	if err != nil {
+		return err
+	}
+	for _, dev := range devices {
+		err = adapter.RemoveDevice(dev.Path)
+		if err != nil {
+			return err
+		}
+
+		err := ClearDevice(&dev)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -99,22 +125,27 @@ func ParseDevice(path dbus.ObjectPath, propsMap map[string]dbus.Variant) (*Devic
 	}
 	c.Properties = props
 	d.chars = make(map[dbus.ObjectPath]*profile.GattCharacteristic1, 0)
+	d.descr = make(map[dbus.ObjectPath]*profile.GattDescriptor1, 0)
 
 	return d, nil
 }
 
 func (d *Device) watchProperties() error {
+	d.lock.RLock()
 	if d.watchPropertiesChannel != nil {
+		d.lock.RUnlock()
 		d.unwatchProperties()
+	} else {
+		d.lock.RUnlock()
 	}
 
 	channel, err := d.client.Register()
 	if err != nil {
 		return err
 	}
-	d.wpcMutex.Lock()
+	d.lock.Lock()
 	d.watchPropertiesChannel = channel
-	d.wpcMutex.Unlock()
+	d.lock.Unlock()
 
 	go (func() {
 		for {
@@ -132,6 +163,9 @@ func (d *Device) watchProperties() error {
 			if sig.Name != bluez.PropertiesChanged {
 				continue
 			}
+			if fmt.Sprint(sig.Path) != d.Path {
+				continue
+			}
 
 			// for i := 0; i < len(sig.Body); i++ {
 			// log.Printf("%s -> %s\n", reflect.TypeOf(sig.Body[i]), sig.Body[i])
@@ -139,10 +173,13 @@ func (d *Device) watchProperties() error {
 
 			iface := sig.Body[0].(string)
 			changes := sig.Body[1].(map[string]dbus.Variant)
+			propertyChangedEvents := make([]PropertyChangedEvent, 0)
 			for field, val := range changes {
 
 				// updates [*]Properties struct
+				d.lock.RLock()
 				props := d.Properties
+				d.lock.RUnlock()
 
 				s := reflect.ValueOf(props).Elem()
 				// exported field
@@ -153,13 +190,20 @@ func (d *Device) watchProperties() error {
 					// the use of unexported struct fields.
 					if f.CanSet() {
 						x := reflect.ValueOf(val.Value())
+						props.Lock.Lock()
 						f.Set(x)
+						props.Lock.Unlock()
 					}
 				}
 
 				propChanged := PropertyChangedEvent{string(iface), field, val.Value(), props, d}
+				propertyChangedEvents = append(propertyChangedEvents, propChanged)
+			}
+
+			for _, propChanged := range propertyChangedEvents {
 				d.Emit("changed", propChanged)
 			}
+
 		}
 	})()
 
@@ -172,15 +216,16 @@ type Device struct {
 	Properties             *profile.Device1Properties
 	client                 *profile.Device1
 	chars                  map[dbus.ObjectPath]*profile.GattCharacteristic1
-	watchPropertiesChannel chan *dbus.Signal
+	descr                  map[dbus.ObjectPath]*profile.GattDescriptor1
 	connDissconnMutex      *sync.Mutex
-	wpcMutex               *sync.Mutex
+	watchPropertiesChannel chan *dbus.Signal
+	lock                   sync.RWMutex
 }
 
 func (d *Device) unwatchProperties() error {
 	var err error
-	d.wpcMutex.Lock()
-	defer d.wpcMutex.Unlock()
+	d.lock.Lock()
+	defer d.lock.Unlock()
 	if d.watchPropertiesChannel != nil {
 		err = d.client.Unregister(d.watchPropertiesChannel)
 		close(d.watchPropertiesChannel)
@@ -216,7 +261,10 @@ func (d *Device) GetProperties() (*profile.Device1Properties, error) {
 		return nil, err
 	}
 
+	d.lock.Lock()
 	d.Properties = props
+	defer d.lock.Unlock()
+
 	return d.Properties, err
 }
 
@@ -319,7 +367,15 @@ func (d *Device) GetAllServicesAndUUID() ([]string, error) {
 
 //GetCharByUUID return a GattService by its uuid, return nil if not found
 func (d *Device) GetCharByUUID(uuid string) (*profile.GattCharacteristic1, error) {
+	devices, err := d.GetCharsByUUID(uuid)
+	if len(devices) > 0 {
+		return devices[0], err
+	}
+	return nil, err
+}
 
+//GetCharsByUUID returns all characteristics that match the given UUID.
+func (d *Device) GetCharsByUUID(uuid string) ([]*profile.GattCharacteristic1, error) {
 	uuid = strings.ToUpper(uuid)
 
 	list, err := d.GetCharsList()
@@ -327,10 +383,9 @@ func (d *Device) GetCharByUUID(uuid string) (*profile.GattCharacteristic1, error
 		return nil, err
 	}
 
-	var deviceFound *profile.GattCharacteristic1
+	var charsFound []*profile.GattCharacteristic1
 
 	for _, path := range list {
-
 		// use cache
 		_, ok := d.chars[path]
 		if !ok {
@@ -345,15 +400,15 @@ func (d *Device) GetCharByUUID(uuid string) (*profile.GattCharacteristic1, error
 		cuuid := strings.ToUpper(props.UUID)
 
 		if cuuid == uuid {
-			deviceFound = d.chars[path]
+			charsFound = append(charsFound, d.chars[path])
 		}
 	}
 
-	if deviceFound == nil {
+	if len(charsFound) == 0 {
 		return nil, errors.New("characteristic not found")
 	}
 
-	return deviceFound, nil
+	return charsFound, nil
 }
 
 //GetCharsList return a device characteristics
@@ -367,23 +422,85 @@ func (d *Device) GetCharsList() ([]dbus.ObjectPath, error) {
 	}
 
 	list := manager.GetObjects()
-	for objpath := range list {
-		path := string(objpath)
+	list.Range(func(objpath, value interface{}) bool {
+		path := string(objpath.(dbus.ObjectPath))
 		if !strings.HasPrefix(path, d.Path) {
-			continue
+			return true
 		}
 		charPos := strings.Index(path, "char")
 		if charPos == -1 {
-			continue
+			return true
 		}
 		if strings.Index(path[charPos:], "desc") != -1 {
-			continue
+			return true
 		}
 
-		chars = append(chars, objpath)
-	}
+		chars = append(chars, objpath.(dbus.ObjectPath))
+		return true
+	})
 
 	return chars, nil
+}
+
+//GetDescriptorList returns all descriptors
+func (d *Device) GetDescriptorList() ([]dbus.ObjectPath, error) {
+	var descr []dbus.ObjectPath
+
+	manager, err := GetManager()
+	if err != nil {
+		return nil, err
+	}
+
+	list := manager.GetObjects()
+	list.Range(func(objpath, value interface{}) bool {
+		path := string(objpath.(dbus.ObjectPath))
+		if !strings.HasPrefix(path, d.Path) {
+			return true
+		}
+		charPos := strings.Index(path, "char")
+		if charPos == -1 {
+			return true
+		}
+		if strings.Index(path[charPos:], "desc") == -1 {
+			return true
+		}
+
+		descr = append(descr, objpath.(dbus.ObjectPath))
+		return true
+	})
+
+	return descr, nil
+}
+
+//GetDescriptors returns all descriptors for a given characteristic
+func (d *Device) GetDescriptors(char *profile.GattCharacteristic1) ([]*profile.GattDescriptor1, error) {
+	descrPaths, err := d.GetDescriptorList()
+	if err != nil {
+		return nil, err
+	}
+
+	var descrFound []*profile.GattDescriptor1
+
+	for _, path := range descrPaths {
+		_, ok := d.descr[path]
+		if !ok {
+			descr, err := profile.NewGattDescriptor1(string(path))
+			if err != nil {
+				return nil, err
+			}
+			d.descr[path] = descr
+		}
+
+		if dbus.ObjectPath(char.Path) == d.descr[path].Properties.Characteristic {
+			descrFound = append(descrFound, d.descr[path])
+		}
+	}
+
+	if len(descrFound) == 0 {
+		return nil, errors.New("descriptors not found")
+	}
+
+	return descrFound, nil
 }
 
 //IsConnected check if connected to the device
@@ -491,6 +608,16 @@ func (d *Device) Disconnect() error {
 	if err != nil {
 		return err
 	}
+	c.Disconnect()
+
+	d.lock.RLock()
+	if d.watchPropertiesChannel != nil {
+		d.lock.RUnlock()
+		d.unwatchProperties()
+	} else {
+		d.lock.RUnlock()
+	}
+achtung
 
 	cbChan := make(chan bool)
 	var cb *emitter.Callback
@@ -550,6 +677,5 @@ func (d *Device) Pair() error {
 	if err != nil {
 		return err
 	}
-	c.Pair()
-	return nil
+	return c.Pair()
 }

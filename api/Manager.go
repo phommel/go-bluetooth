@@ -10,6 +10,7 @@ import (
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/util"
 	"github.com/godbus/dbus"
 	log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var manager *Manager
@@ -22,7 +23,6 @@ func GetManager() (*Manager, error) {
 			return nil, err
 		}
 		manager = m
-
 	}
 	return manager, nil
 }
@@ -31,8 +31,10 @@ func GetManager() (*Manager, error) {
 func NewManager() (*Manager, error) {
 	m := new(Manager)
 	m.objectManager = profile.NewObjectManager("org.bluez", "/")
-	m.objects = make(map[dbus.ObjectPath]map[string]map[string]dbus.Variant)
 	m.objectsMx = &sync.Mutex{}
+
+	// m.objects = make(map[dbus.ObjectPath]map[string]map[string]dbus.Variant)
+	m.objects = new(sync.Map)
 
 	// watch for signaling from ObjectManager
 	m.watchChanges()
@@ -50,7 +52,7 @@ func NewManager() (*Manager, error) {
 type Manager struct {
 	objectManager       *profile.ObjectManager
 	watchChangesEnabled bool
-	objects             map[dbus.ObjectPath]map[string]map[string]dbus.Variant
+	objects             *sync.Map
 	objectsMx           *sync.Mutex
 	channel             chan *dbus.Signal
 }
@@ -106,8 +108,10 @@ func (m *Manager) watchChanges() error {
 					}
 
 					// keep cache up to date
+					m.objects[path] = props
 					m.objectsMx.Lock()
 					m.objects[path] = props
+					m.objects.Store(path, props)
 					m.objectsMx.Unlock()
 
 					emitChanges(path, props)
@@ -125,6 +129,7 @@ func (m *Manager) watchChanges() error {
 					// keep cache up to date
 					if _, ok := m.objects[path]; ok {
 						m.objectsMx.Lock()
+						m.objects.Delete(path)
 						delete(m.objects, path)
 						m.objectsMx.Unlock()
 					}
@@ -232,7 +237,9 @@ func (m *Manager) LoadObjects() error {
 	if err != nil {
 		return err
 	}
-	m.objects = objs
+	for path, object := range objs {
+		m.objects.Store(path, object)
+	}
 	return nil
 }
 
@@ -264,9 +271,10 @@ func (m *Manager) RefreshState() error {
 	}
 
 	objs := m.GetObjects()
-	for path, ifaces := range objs {
-		emitChanges(path, ifaces)
-	}
+	objs.Range(func(path, ifaces interface{}) bool {
+		emitChanges(path.(dbus.ObjectPath), ifaces.(map[string]map[string]dbus.Variant))
+		return true
+	})
 
 	return nil
 }

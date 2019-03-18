@@ -70,7 +70,7 @@ func discoverDevice() error {
 	defer api.Exit()
 
 	log.Debugf("Reset bluetooth device")
-	err := linux.NewBtMgmt(adapterID).Reset()
+	err := btmgmt.NewBtMgmt(adapterID).Reset()
 	if err != nil {
 		return err
 	}

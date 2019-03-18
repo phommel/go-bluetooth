@@ -131,26 +131,58 @@ func (s *GattCharacteristic1) RemoveDescriptor(char *GattDescriptor1) error {
 }
 
 //ReadValue read a value
-func (s *GattCharacteristic1) ReadValue(options map[string]interface{}) []byte {
+func (s *GattCharacteristic1) ReadValue(options map[string]interface{}) ([]byte, *dbus.Error) {
 	log.Debug("Characteristic.ReadValue")
-	b := make([]byte, 0)
-	return b
+
+	b, err := s.config.service.config.app.HandleRead(s.config.service.properties.UUID, s.properties.UUID)
+
+	var dberr *dbus.Error
+	if err != nil {
+		if err.code == -1 {
+			// No registered callback, so we'll just use our stored value
+			b = s.properties.Value
+		} else {
+			dberr = dbus.NewError(err.Error(), nil)
+		}
+	}
+
+	return b, dberr
 }
 
 //WriteValue write a value
-func (s *GattCharacteristic1) WriteValue(value []byte, options map[string]interface{}) {
+func (s *GattCharacteristic1) WriteValue(value []byte, options map[string]interface{}) *dbus.Error {
 	log.Debug("Characteristic.WriteValue")
+
+	err := s.config.service.config.app.HandleWrite(s.config.service.properties.UUID, s.properties.UUID, value)
+
+	if err != nil {
+		if err.code == -1 {
+			// No registered callback, so we'll just store this value
+			s.UpdateValue(value)
+			return nil
+		}
+		dberr := dbus.NewError(err.Error(), nil)
+		return dberr
+	}
+
+	return nil
+}
+
+//UpdateValue update a value
+func (s *GattCharacteristic1) UpdateValue(value []byte) {
+	s.properties.Value = value
+	s.PropertiesInterface.Instance().Set(s.Interface(), "Value", dbus.MakeVariant(value))
 }
 
 //StartNotify start notification
-func (s *GattCharacteristic1) StartNotify() error {
+func (s *GattCharacteristic1) StartNotify() *dbus.Error {
 	log.Debug("Characteristic.StartNotify")
 	s.notifying = true
 	return nil
 }
 
 //StopNotify stop notification
-func (s *GattCharacteristic1) StopNotify() error {
+func (s *GattCharacteristic1) StopNotify() *dbus.Error {
 	log.Debug("Characteristic.StopNotify")
 	s.notifying = false
 	return nil

@@ -19,6 +19,7 @@ import (
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/devices"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
 	log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var adapterID = "hci0"
@@ -51,7 +52,7 @@ func ShowSensorTagInfo(adapterID string) error {
 	if err != nil {
 		return err
 	}
-	log.Debugf("AdapterExists: %b", boo)
+	log.Debugf("AdapterExists: %t", boo)
 
 	err = api.StartDiscoveryOn(adapterID)
 	if err != nil {
@@ -92,7 +93,7 @@ func ConnectAndFetchSensorDetailAndData(tagAddress string) error {
 	if err != nil {
 		return err
 	}
-	log.Debugf("device (dev): %s", dev)
+	log.Debugf("device (dev): %v", dev)
 
 	if dev == nil {
 		return errors.New("device not found")
@@ -164,7 +165,7 @@ func ConnectAndFetchSensorDetailAndData(tagAddress string) error {
 	}
 
 	err = dev.On("data", emitter.NewCallback(func(ev emitter.Event) {
-		x := ev.GetData().(api.DataEvent)
+		x := ev.GetData().(devices.SensorTagDataEvent)
 		log.Debugf("%++v", x)
 	}))
 

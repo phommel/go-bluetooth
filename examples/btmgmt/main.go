@@ -12,7 +12,7 @@ func main() {
 
 	log.SetLevel(log.DebugLevel)
 
-	list, err := linux.GetAdapters()
+	list, err := btmgmt.GetAdapters()
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)

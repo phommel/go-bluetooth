@@ -2,12 +2,15 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
+	"github.com/sirupsen/logrus"
 )
 
 //UUIDSuffix fixed 128bit UUID [0000]+[xxxx]+[-0000-1000-8000-00805F9B34FB]
@@ -19,6 +22,7 @@ func NewApplication(config *ApplicationConfig) (*Application, error) {
 	if config.ObjectName == "" {
 		return nil, errors.New("objectName is required")
 	}
+
 	if config.ObjectPath == "" {
 		return nil, errors.New("objectPath is required")
 	}
@@ -50,6 +54,18 @@ func NewApplication(config *ApplicationConfig) (*Application, error) {
 	return s, nil
 }
 
+//GattWriteCallback A callback we can register to handle write requests
+type GattWriteCallback func(app *Application, service_uuid string, charUUID string, value []byte) error
+
+//GattDescriptorWriteCallback A callback we can register to handle descriptor write requests
+type GattDescriptorWriteCallback func(app *Application, service_uuid string, charUUID string, descUUID string, value []byte) error
+
+//GattReadCallback A callback we can register to handle read requests
+type GattReadCallback func(app *Application, service_uuid string, charUUID string) ([]byte, error)
+
+//GattDescriptorReadCallback A callback we can register to handle descriptor ead requests
+type GattDescriptorReadCallback func(app *Application, service_uuid string, charUUID string, descUUID string) ([]byte, error)
+
 // ApplicationConfig configuration for the bluetooth service
 type ApplicationConfig struct {
 	UUIDSuffix   string
@@ -58,6 +74,12 @@ type ApplicationConfig struct {
 	ObjectName   string
 	ObjectPath   dbus.ObjectPath
 	serviceIndex int
+	LocalName    string
+
+	WriteFunc     GattWriteCallback
+	ReadFunc      GattReadCallback
+	DescWriteFunc GattDescriptorWriteCallback
+	DescReadFunc  GattDescriptorReadCallback
 }
 
 // Application a bluetooth service exposed by bluez
@@ -65,6 +87,9 @@ type Application struct {
 	config        *ApplicationConfig
 	objectManager *ObjectManager
 	services      map[dbus.ObjectPath]*GattService1
+
+	adMgr         *profile.LEAdvertisingManager1
+	advertisement *LEAdvertisement1
 }
 
 //GetObjectManager return the object manager interface handler
@@ -84,26 +109,33 @@ func (app *Application) Name() string {
 
 // GenerateUUID generate a 128bit UUID
 func (app *Application) GenerateUUID(uuidVal string) string {
-	base := "0000"
+	base := app.config.UUID
 	if len(uuidVal) == 8 {
 		base = ""
 	}
-	return base + uuidVal + UUIDSuffix
+	return base + uuidVal + app.config.UUIDSuffix
 }
 
 //CreateService create a new GattService1 instance
-func (app *Application) CreateService(props *profile.GattService1Properties) (*GattService1, error) {
+func (app *Application) CreateService(props *profile.GattService1Properties, advertisedOptional ...bool) (*GattService1, error) {
 	app.config.serviceIndex++
 	appPath := string(app.Path())
 	if appPath == "/" {
 		appPath = ""
 	}
+
+	advertise := false
+	if len(advertisedOptional) > 0 {
+		advertise = advertisedOptional[0]
+	}
+
 	path := appPath + "/service" + strconv.Itoa(app.config.serviceIndex)
 	c := &GattService1Config{
 		app:        app,
 		objectPath: dbus.ObjectPath(path),
 		ID:         app.config.serviceIndex,
 		conn:       app.config.conn,
+		advertised: advertise,
 	}
 	s, err := NewGattService1(c, props)
 	return s, err
@@ -219,6 +251,88 @@ func (app *Application) exportTree() error {
 	return err
 }
 
+// CallbackError error from a callback
+type CallbackError struct {
+	msg  string
+	code int
+}
+
+func (e *CallbackError) Error() string {
+	return e.msg
+}
+
+//NewCallbackError create a new callback error
+func NewCallbackError(code int, msg string) *CallbackError {
+	result := &CallbackError{msg: msg, code: code}
+	return result
+}
+
+//CallbackNotRegistered callback not registered
+const CallbackNotRegistered = -1
+
+//CallbackFunctionError callback reported an error
+const CallbackFunctionError = -2
+
+//HandleRead Handle application read
+func (app *Application) HandleRead(srvUUID string, uuid string) ([]byte, *CallbackError) {
+	if app.config.ReadFunc == nil {
+		b := make([]byte, 0)
+		return b, NewCallbackError(-1, "No callback registered.")
+	}
+
+	var cberr *CallbackError
+	b, err := app.config.ReadFunc(app, srvUUID, uuid)
+	if err != nil {
+		cberr = NewCallbackError(-2, err.Error())
+	}
+
+	return b, cberr
+}
+
+// HandleWrite handle application write
+func (app *Application) HandleWrite(srvUUID string, uuid string, value []byte) *CallbackError {
+	if app.config.WriteFunc == nil {
+		return NewCallbackError(-1, "No callback registered.")
+	}
+
+	err := app.config.WriteFunc(app, srvUUID, uuid, value)
+	if err != nil {
+		return NewCallbackError(-2, err.Error())
+	}
+
+	return nil
+}
+
+//HandleDescriptorRead handle descriptor read
+func (app *Application) HandleDescriptorRead(srvUUID string, charUUID string, descUUID string) ([]byte, *CallbackError) {
+	if app.config.DescReadFunc == nil {
+		b := make([]byte, 0)
+		return b, NewCallbackError(-1, "No callback registered.")
+	}
+
+	var cberr *CallbackError
+	b, err := app.config.DescReadFunc(app, srvUUID, charUUID, descUUID)
+	if err != nil {
+		cberr = NewCallbackError(-2, err.Error())
+	}
+
+	return b, cberr
+}
+
+//HandleDescriptorWrite handle descriptor write
+func (app *Application) HandleDescriptorWrite(srvUUID string, charUUID string, descUUID string, value []byte) *CallbackError {
+	if app.config.DescWriteFunc == nil {
+		return NewCallbackError(-1, "No callback registered.")
+	}
+
+	err := app.config.DescWriteFunc(app, srvUUID, charUUID, descUUID, value)
+	if err != nil {
+		return NewCallbackError(-2, err.Error())
+	}
+
+	return nil
+}
+
 //Run start the application
 func (app *Application) Run() error {
 
@@ -228,4 +342,95 @@ func (app *Application) Run() error {
 	}
 
 	return nil
+}
+
+//StartAdvertising advertise information for a service
+func (app *Application) StartAdvertising(deviceInterface string) error {
+
+	if app.advertisement != nil || app.adMgr != nil {
+		logrus.Debugf("Already advertising on %s", deviceInterface)
+		return nil
+	}
+
+	path := fmt.Sprintf("/org/bluez/advertisement/%s", deviceInterface)
+
+	logrus.Debugf("Registering service on %s (%s)", deviceInterface, path)
+
+	config := &LEAdvertisement1Config{
+		conn:       app.config.conn,
+		objectPath: dbus.ObjectPath(path),
+	}
+
+	serviceUUIDs := make([]string, 0)
+
+	for _, serv := range app.services {
+		if serv.Advertised() {
+			serviceUUIDs = append(serviceUUIDs, serv.properties.UUID)
+		}
+	}
+
+	if len([]byte(strings.Join(serviceUUIDs, ","))) > 31 {
+		logrus.Warn("Advertisment limit of 31 bytes may have been exceeded. Consider not exposing all services IDs with `CreateService(props, false)`")
+	}
+
+	props := &profile.LEAdvertisement1Properties{
+		Type:         "peripheral",
+		LocalName:    app.config.LocalName,
+		ServiceUUIDs: serviceUUIDs,
+	}
+
+	var err error
+
+	advertisement, err := NewLEAdvertisement1(config, props)
+	if err != nil {
+		return fmt.Errorf("NewLEAdvertisement1: %s", err)
+	}
+
+	app.advertisement = advertisement
+
+	err = advertisement.Expose()
+	if err != nil {
+		app.advertisement = nil
+		return fmt.Errorf("Expose: %s", err)
+	}
+
+	options := make(map[string]interface{})
+
+	app.adMgr = profile.NewLEAdvertisingManager1(deviceInterface)
+
+	err = app.adMgr.RegisterAdvertisement(path, options)
+	if err != nil {
+		app.advertisement = nil
+		app.adMgr = nil
+		return fmt.Errorf("RegisterAdvertisement: %s", err)
+	}
+
+	adapter := profile.NewAdapter1(deviceInterface)
+	err = adapter.SetProperty("Discoverable", true)
+	if err != nil {
+		return err
+	}
+
+	err = adapter.SetProperty("Powered", true)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//StopAdvertising stop advertising information on a service
+func (app *Application) StopAdvertising() error {
+
+	if app.advertisement == nil || app.adMgr == nil {
+		// Not advertising
+		return nil
+	}
+
+	err := app.adMgr.UnregisterAdvertisement(string(app.advertisement.config.objectPath))
+
+	app.advertisement = nil
+	app.adMgr = nil
+
+	return err
 }

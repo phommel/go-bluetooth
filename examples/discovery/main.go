@@ -21,8 +21,14 @@ func main() {
 	defer api.Exit()
 
 	log.Debugf("Reset bluetooth device")
-	a := linux.NewBtMgmt(adapterID)
+	a := btmgmt.NewBtMgmt(adapterID)
 	err := a.Reset()
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	err = api.FlushDevices(adapterID)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)

@@ -9,7 +9,7 @@ import (
 )
 
 // NewGattDescriptor1 create a new GattDescriptor1 client
-func NewGattDescriptor1(path string) *GattDescriptor1 {
+func NewGattDescriptor1(path string) (*GattDescriptor1, error) {
 	a := new(GattDescriptor1)
 	a.client = bluez.NewClient(
 		&bluez.Config{
@@ -20,8 +20,8 @@ func NewGattDescriptor1(path string) *GattDescriptor1 {
 		},
 	)
 	a.Properties = new(GattDescriptor1Properties)
-	a.GetProperties()
-	return a
+	_, err := a.GetProperties()
+	return a, err
 }
 
 // GattDescriptor1 client
@@ -32,7 +32,7 @@ type GattDescriptor1 struct {
 
 // GattDescriptor1Properties exposed properties for GattDescriptor1
 type GattDescriptor1Properties struct {
-	Value          []byte
+	Value          []byte `dbus:"emit"`
 	Characteristic dbus.ObjectPath
 	UUID           string
 	Flags          []string

@@ -64,13 +64,51 @@ func (s *GattDescriptor1) Properties() map[string]bluez.Properties {
 }
 
 //ReadValue read a value
-func (s *GattDescriptor1) ReadValue(options map[string]interface{}) []byte {
-	b := make([]byte, 0)
-	return b
+func (s *GattDescriptor1) ReadValue(options map[string]interface{}) ([]byte, *dbus.Error) {
+	b, err := s.config.characteristic.config.service.config.app.HandleDescriptorRead(
+		s.config.characteristic.config.service.properties.UUID, s.config.characteristic.properties.UUID,
+		s.properties.UUID)
+
+	var dberr *dbus.Error
+	if err != nil {
+		if err.code == -1 {
+			// No registered callback, so we'll just use our stored value
+			b = s.properties.Value
+		} else {
+			dberr = dbus.NewError(err.Error(), nil)
+		}
+	}
+
+	return b, dberr
 }
 
 //WriteValue write a value
-func (s *GattDescriptor1) WriteValue(value []byte, options map[string]interface{}) {
+func (s *GattDescriptor1) WriteValue(value []byte, options map[string]interface{}) *dbus.Error {
+	err := s.config.characteristic.config.service.config.app.HandleDescriptorWrite(
+		s.config.characteristic.config.service.properties.UUID, s.config.characteristic.properties.UUID,
+		s.properties.UUID, value)
+
+	if err != nil {
+		if err.code == -1 {
+			// No registered callback, so we'll just store this value
+			s.UpdateValue(value)
+			return nil
+		}
+		dberr := dbus.NewError(err.Error(), nil)
+		return dberr
+	}
+
+	return nil
+}
+
+//UpdateValue update a descriptor value
+func (s *GattDescriptor1) UpdateValue(value []byte) error {
+	s.properties.Value = value
+	err := s.PropertiesInterface.Instance().Set(s.Interface(), "Value", dbus.MakeVariant(value))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //Expose the desc to dbus
