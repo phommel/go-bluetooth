@@ -1,10 +1,10 @@
 package profile
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"
-	"github.com/muka/go-bluetooth/bluez"
 )
 
 //All agent capabilities

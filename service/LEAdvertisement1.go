@@ -1,11 +1,11 @@
 package service
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"
-	"github.com/muka/go-bluetooth/bluez"
-	"github.com/muka/go-bluetooth/bluez/profile"
 )
 
 // NewLEAdvertisement1 create a new LEAdvertisement1 client

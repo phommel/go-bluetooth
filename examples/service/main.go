@@ -4,8 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/linux/btmgmt"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/linux/btmgmt"
 	log "github.com/sirupsen/logrus"
 )
 

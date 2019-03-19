@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	log "github.com/sirupsen/logrus"
+
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/linux"
+	log "github.com/sirupsen/logrus"
 )
 
 func createClient(adapterID, hwaddr, serviceID string) (err error) {
@@ -26,7 +26,7 @@ func createClient(adapterID, hwaddr, serviceID string) (err error) {
 	devices, err := api.GetDevices()
 	fail("GetDevices", err)
 	for _, dev := range devices {
-		err = showDeviceInfo(&dev, hwaddr, serviceID)
+		err = showDeviceInfo(dev, hwaddr, serviceID)
 		fail("showDeviceInfo", err)
 	}
 

@@ -10,7 +10,6 @@ import (
 	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/util"
 	"github.com/godbus/dbus"
 	log "github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
 )
 
 var manager *Manager
@@ -108,11 +107,7 @@ func (m *Manager) watchChanges() error {
 					}
 
 					// keep cache up to date
-					m.objects[path] = props
-					m.objectsMx.Lock()
-					m.objects[path] = props
 					m.objects.Store(path, props)
-					m.objectsMx.Unlock()
 
 					emitChanges(path, props)
 				}
@@ -127,12 +122,7 @@ func (m *Manager) watchChanges() error {
 					}
 
 					// keep cache up to date
-					if _, ok := m.objects[path]; ok {
-						m.objectsMx.Lock()
-						m.objects.Delete(path)
-						delete(m.objects, path)
-						m.objectsMx.Unlock()
-					}
+					m.objects.Delete(path)
 
 					for _, iF := range ifaces {
 						// device removed
@@ -243,23 +233,9 @@ func (m *Manager) LoadObjects() error {
 	return nil
 }
 
-//GetObjects returns a snaphot of the cached list of objects from the ObjectManager
-func (m *Manager) GetObjects() map[dbus.ObjectPath]map[string]map[string]dbus.Variant {
-	m.objectsMx.Lock()
-	defer m.objectsMx.Unlock()
-
-	// get deep copy snapshot
-	result := make(map[dbus.ObjectPath]map[string]map[string]dbus.Variant)
-	for opk := range m.objects {
-		result[opk] = make(map[string]map[string]dbus.Variant)
-		for fkey := range m.objects[opk] {
-			result[opk][fkey] = make(map[string]dbus.Variant)
-			for skey, sval := range m.objects[opk][fkey] {
-				result[opk][fkey][skey] = sval
-			}
-		}
-	}
-	return result
+//GetObjects return the cached list of objects from the ObjectManager
+func (m *Manager) GetObjects() *sync.Map {
+	return m.objects
 }
 
 //RefreshState emit local manager objects and interfaces

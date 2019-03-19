@@ -3,7 +3,7 @@ package hciconfig
 import (
 	"strings"
 
-	"github.com/muka/go-bluetooth/linux"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/linux"
 )
 
 // NewHCIConfig initialize a new HCIConfig

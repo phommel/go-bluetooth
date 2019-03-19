@@ -35,7 +35,6 @@ func NewDevice(path string) *Device {
 	d.chars = make(map[dbus.ObjectPath]*profile.GattCharacteristic1, 0)
 	d.descr = make(map[dbus.ObjectPath]*profile.GattDescriptor1, 0)
 	d.connDissconnMutex = &sync.Mutex{}
-	d.wpcMutex = &sync.Mutex{}
 
 	deviceRegistry.Store(path, d)
 
@@ -88,7 +87,7 @@ func FlushDevices(adapterID string) error {
 			return err
 		}
 
-		err := ClearDevice(&dev)
+		err := ClearDevice(dev)
 		if err != nil {
 			return err
 		}
@@ -604,21 +603,6 @@ func (d *Device) Disconnect() error {
 	d.connDissconnMutex.Lock()
 	defer d.connDissconnMutex.Unlock()
 
-	c, err := d.GetClient()
-	if err != nil {
-		return err
-	}
-	c.Disconnect()
-
-	d.lock.RLock()
-	if d.watchPropertiesChannel != nil {
-		d.lock.RUnlock()
-		d.unwatchProperties()
-	} else {
-		d.lock.RUnlock()
-	}
-achtung
-
 	cbChan := make(chan bool)
 	var cb *emitter.Callback
 	cb = emitter.NewCallback(func(ev emitter.Event) {
@@ -638,7 +622,10 @@ achtung
 
 	d.On("changed", cb)
 
-	err = c.Disconnect()
+	c, err := d.GetClient()
+	if err == nil {
+		c.Disconnect()
+	}
 	if err == nil {
 		select {
 		case <-cbChan:
@@ -665,10 +652,14 @@ achtung
 		d.Off("changed", cb)
 	}
 
+	d.lock.RLock()
 	if d.watchPropertiesChannel != nil {
+		d.lock.RUnlock()
 		d.unwatchProperties()
+	} else {
+		d.lock.RUnlock()
 	}
-	return err
+	return nil
 }
 
 //Pair a device
