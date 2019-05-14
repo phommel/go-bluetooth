@@ -8,6 +8,7 @@ import (
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"
+	log "github.com/sirupsen/logrus"
 )
 
 // NewGattService1 create a new instance of GattService1
@@ -149,6 +150,8 @@ func (s *GattService1) Expose() error {
 
 	conn := s.config.conn
 
+	log.Debug(s.Path())
+	log.Debug(s.Interface())
 	err := conn.Export(s, s.Path(), s.Interface())
 	if err != nil {
 		return err

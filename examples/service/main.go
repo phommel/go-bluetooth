@@ -54,13 +54,18 @@ func main() {
 
 	var err error
 
-	agent, err := createAgent()
-	fail("createAgent", err)
+	err = setupAdapter(serviceAdapterID)
+	fail("setupAdapter", err)
 
-	defer agent.Release()
+	//agent, err := createAgent()
+	//fail("createAgent", err)
+
+	//defer agent.Release()
 
 	app, err := registerApplication(serviceAdapterID)
 	fail("registerApplication", err)
+
+	//select {}
 
 	defer app.StopAdvertising()
 
@@ -78,8 +83,71 @@ func main() {
 		break
 	}
 
-	err = createClient(clientAdapterID, hwaddr, serviceID)
-	fail("createClient", err)
+	log.Info("Hardware Addr.:" + hwaddr + "   Service ID:" + serviceID)
+	//err = createClient(clientAdapterID, hwaddr, serviceID)
+	//fail("createClient", err)
 
 	select {}
+
+	log.Info("stopped")
+}
+
+func setupAdapter(aid string) error {
+
+	btmgmt := btmgmt.NewBtMgmt(aid)
+
+	// turn off
+	err := btmgmt.SetPowered(false)
+	if err != nil {
+		return err
+	}
+
+	// turn on
+	err = btmgmt.SetPowered(true)
+	if err != nil {
+		return err
+	}
+
+	err = btmgmt.SetName(appName)
+	if err != nil {
+		return err
+	}
+
+	err = btmgmt.SetAdvertising(true)
+	if err != nil {
+		return err
+	}
+
+	err = btmgmt.SetLe(true)
+	if err != nil {
+		return err
+	}
+
+	err = btmgmt.SetConnectable(true)
+	if err != nil {
+		return err
+	}
+
+	err = btmgmt.SetConnectable(true)
+	if err != nil {
+		return err
+	}
+
+	err = btmgmt.SetDiscoverable(false)
+	if err != nil {
+		return err
+	}
+
+	err = btmgmt.SetDiscoverable(true)
+	if err != nil {
+		return err
+	}
+
+	// // turn on
+	// err = btmgmt.SetPowered(true)
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
 }
