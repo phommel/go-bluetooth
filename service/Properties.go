@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
 	"github.com/fatih/structs"
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"

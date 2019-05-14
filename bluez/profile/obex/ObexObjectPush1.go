@@ -1,8 +1,8 @@
 package obex
 
 import (
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/util"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/util"
 	"github.com/godbus/dbus"
 )
 

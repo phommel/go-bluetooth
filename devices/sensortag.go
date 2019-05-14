@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/api"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez/profile"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/emitter"
 	"github.com/godbus/dbus"
 	log "github.com/sirupsen/logrus"
 )

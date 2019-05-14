@@ -3,7 +3,7 @@ package hciconfig
 import (
 	"strings"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/linux"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/linux"
 )
 
 // NewHCIConfig initialize a new HCIConfig

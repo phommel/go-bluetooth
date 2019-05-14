@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile/obex"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/api"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez/profile/obex"
 	log "github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )

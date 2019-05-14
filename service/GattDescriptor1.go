@@ -1,8 +1,8 @@
 package service
 
 import (
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez/profile"
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"

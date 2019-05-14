@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/service"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/api"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez/profile"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/service"
 	log "github.com/sirupsen/logrus"
 )
 

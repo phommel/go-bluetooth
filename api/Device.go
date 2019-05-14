@@ -10,10 +10,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/util"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez/profile"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/emitter"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/util"
 	"github.com/godbus/dbus"
 )
 

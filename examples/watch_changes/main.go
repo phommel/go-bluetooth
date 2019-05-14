@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
-	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/linux"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/api"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/emitter"
+	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/linux"
 	log "github.com/sirupsen/logrus"
 )
 
