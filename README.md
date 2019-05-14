@@ -4,9 +4,7 @@ Golang bluetooth client based on bluez DBus interfaces
 
 See here for reference https://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc
 
-## Status
-
-The current API is unstable and may change in the future.
+## Features
 
 The features implemented are
 
@@ -18,20 +16,37 @@ The features implemented are
 - [x] Handle systemd `bluetooth.service` unit
 - [x] Expose `hciconfig` basic API
 - [x] Expose bluetooth services via bluez GATT API
-- [ ] HCI protocol communication
-- [ ] Pairing support
+- [x] Basic pairing support
 
 ## Examples
 
-Check `examples/` folder for an overview of the API
+The `examples/` folder offer an overview of library
+
+- `agent` a simple agent to support pairing
+- `btmgmt` interface to CLI btmgmt
+- `discovery` find devices around
+- `hci_updown` HCI based communication example
+- `obex_push` send file to a device
+- `sensortag_info` Obtain data from a TI SensorTag
+- `sensortag_temperature` Obtain temperature from a TI SensorTag
+- `service` expose a bluetooth device with corresponding services
+- `show_miband_info` show informations for MiBand2
+- `watch_changes` register for notifications from a TI SensorTag
+
+**Note** Ensure to install proper dbus rules on the system. For a dev setup use
+
+```
+sudo ln -s `pwd`/scripts/dbus-go-bluetooth-service.conf /etc/dbus-1/system.d/
+sudo ln -s `pwd`/scripts/dbus-go-bluetooth-dev.conf /etc/dbus-1/system.d/
+```
+
 
 ## Setup
 
 The library has been tested with
 
-- golang `1.9` (minimum `v1.6`)
-- bluez bluetooth `v5.48` (minimum supported `v5.43`)
-- ubuntu 16.04 and raspbian (armv7)
+- golang `1.11.4` (starting from `v1.6`)
+- bluez bluetooth `v5.50` (starting from `v5.43`)
 
 ### bluez upgrade
 
@@ -51,7 +66,7 @@ See in `scripts/` how to upgrade bluez
 - Create a dbus profile
 
     ```sh
-    ln -s `pwd`/scripts/dbus-dev.conf /etc/dbus1/system.d/go-bluetooth.config
+    ln -s `pwd`/scripts/dbus-dev.conf /etc/dbus-1/system.d/go-bluetooth.config
     ```
 - Monitor activity
 
@@ -59,25 +74,20 @@ See in `scripts/` how to upgrade bluez
 
 - View `bluetoothd` debug messages
 
-    `sudo bluetoothd -Edn P hostname`
+    `sudo service bluetooth stop && sudo bluetoothd -Edn P hostname`
 
 - Enable LE advertisement (to use a single pc, you will need 2 bluetooth adapter)
 
   ```bash
+
     sudo btmgmt -i 0 power off
     sudo btmgmt -i 0 name "my go app"
     sudo btmgmt -i 0 le on    
     sudo btmgmt -i 0 connectable on
     sudo btmgmt -i 0 advertising on
     sudo btmgmt -i 0 power on
+
   ```
-
-## TODO List / Help wanted
-
--   Add docs with examples
--   Add Device read / write and custom data converters
--   Unit tests coverage
--   Integrate hci communication from `github.com/[currentlabs|go-ble]/ble`
 
 ## References
 

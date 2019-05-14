@@ -4,15 +4,15 @@ package main
 import (
 	"os"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/muka/go-bluetooth/linux"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/linux"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
 
 	log.SetLevel(log.DebugLevel)
 
-	list, err := linux.GetAdapters()
+	list, err := btmgmt.GetAdapters()
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)

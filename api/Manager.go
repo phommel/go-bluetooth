@@ -2,13 +2,14 @@ package api
 
 import (
 	"strings"
+	"sync"
 
-	log "github.com/Sirupsen/logrus"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/util"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
-	"github.com/muka/go-bluetooth/bluez/profile"
-	"github.com/muka/go-bluetooth/emitter"
-	"github.com/muka/go-bluetooth/util"
+	log "github.com/sirupsen/logrus"
 )
 
 var manager *Manager
@@ -21,7 +22,6 @@ func GetManager() (*Manager, error) {
 			return nil, err
 		}
 		manager = m
-
 	}
 	return manager, nil
 }
@@ -30,7 +30,10 @@ func GetManager() (*Manager, error) {
 func NewManager() (*Manager, error) {
 	m := new(Manager)
 	m.objectManager = profile.NewObjectManager("org.bluez", "/")
-	m.objects = make(map[dbus.ObjectPath]map[string]map[string]dbus.Variant)
+	m.objectsMx = &sync.Mutex{}
+
+	// m.objects = make(map[dbus.ObjectPath]map[string]map[string]dbus.Variant)
+	m.objects = new(sync.Map)
 
 	// watch for signaling from ObjectManager
 	m.watchChanges()
@@ -48,7 +51,8 @@ func NewManager() (*Manager, error) {
 type Manager struct {
 	objectManager       *profile.ObjectManager
 	watchChangesEnabled bool
-	objects             map[dbus.ObjectPath]map[string]map[string]dbus.Variant
+	objects             *sync.Map
+	objectsMx           *sync.Mutex
 	channel             chan *dbus.Signal
 }
 
@@ -58,7 +62,7 @@ func (m *Manager) unwatchChanges() error {
 		close(m.channel)
 	}
 	m.watchChangesEnabled = false
-	return m.objectManager.Unregister()
+	return m.objectManager.Unregister(m.channel)
 }
 
 // watchChanges regitster for signals from the ObjectManager
@@ -97,21 +101,28 @@ func (m *Manager) watchChanges() error {
 					path := v.Body[0].(dbus.ObjectPath)
 					props := v.Body[1].(map[string]map[string]dbus.Variant)
 
+					for propname := range props {
+						emitter.Emit("ifaceadd", []string{string(path), propname})
+						//log.Debug("DBus: interface added: '" + string(path) + "' " + propname)
+					}
+
 					// keep cache up to date
-					m.objects[path] = props
+					m.objects.Store(path, props)
 
 					emitChanges(path, props)
 				}
 			case bluez.InterfacesRemoved:
 				{
-
 					path := v.Body[0].(dbus.ObjectPath)
 					ifaces := v.Body[1].([]string)
 
-					// keep cache up to date
-					if _, ok := m.objects[path]; ok {
-						delete(m.objects, path)
+					for _, iname := range ifaces {
+						emitter.Emit("ifaceremove", []string{string(path), iname})
+						//log.Debug("DBus: interface removed: '" + string(path) + "' " + iname)
 					}
+
+					// keep cache up to date
+					m.objects.Delete(path)
 
 					for _, iF := range ifaces {
 						// device removed
@@ -216,13 +227,15 @@ func (m *Manager) LoadObjects() error {
 	if err != nil {
 		return err
 	}
-	m.objects = objs
+	for path, object := range objs {
+		m.objects.Store(path, object)
+	}
 	return nil
 }
 
 //GetObjects return the cached list of objects from the ObjectManager
-func (m *Manager) GetObjects() *map[dbus.ObjectPath]map[string]map[string]dbus.Variant {
-	return &m.objects
+func (m *Manager) GetObjects() *sync.Map {
+	return m.objects
 }
 
 //RefreshState emit local manager objects and interfaces
@@ -234,16 +247,17 @@ func (m *Manager) RefreshState() error {
 	}
 
 	objs := m.GetObjects()
-	for path, ifaces := range *objs {
-		emitChanges(path, ifaces)
-	}
+	objs.Range(func(path, ifaces interface{}) bool {
+		emitChanges(path.(dbus.ObjectPath), ifaces.(map[string]map[string]dbus.Variant))
+		return true
+	})
 
 	return nil
 }
 
 //Close Close the Manager and free underlying resources
 func (m *Manager) Close() {
-	m.objectManager.Unregister()
+	m.objectManager.Unregister(m.channel)
 	m.objectManager.Close()
 	m.objectManager = nil
 }

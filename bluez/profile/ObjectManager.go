@@ -1,8 +1,8 @@
 package profile
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
 )
 
 // NewObjectManager create a new Device1 client
@@ -45,8 +45,8 @@ func (o *ObjectManager) Register() (chan *dbus.Signal, error) {
 }
 
 //Unregister watch for signal events
-func (o *ObjectManager) Unregister() error {
+func (o *ObjectManager) Unregister(signal chan *dbus.Signal) error {
 	path := o.client.Config.Path
 	iface := o.client.Config.Iface
-	return o.client.Unregister(path, iface)
+	return o.client.Unregister(path, iface, signal)
 }

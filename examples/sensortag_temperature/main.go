@@ -1,10 +1,10 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/devices"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/devices"
 )
 
 // example of reading temperature from a TI sensortag

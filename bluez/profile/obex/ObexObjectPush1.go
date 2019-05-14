@@ -1,9 +1,9 @@
 package obex
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/util"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
-	"github.com/muka/go-bluetooth/util"
 )
 
 // NewObjectPush1 create a new ObjectPush1 client

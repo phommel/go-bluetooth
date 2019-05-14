@@ -1,9 +1,9 @@
 package profile
 
 import (
-	log "github.com/Sirupsen/logrus"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
+	log "github.com/sirupsen/logrus"
 )
 
 // NewGattManager1 create a new GattManager1 client

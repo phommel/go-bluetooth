@@ -34,7 +34,7 @@ func (e BaseEvent) GetData() interface{} {
 
 var pipe chan Event
 var events = make(map[string][]*Callback, 0)
-var mutex = &sync.Mutex{}
+var mutex = &sync.RWMutex{}
 
 func loop() {
 	for {
@@ -90,7 +90,17 @@ func On(event string, callback *Callback) error {
 		events[event] = make([]*Callback, 0)
 	}
 
-	events[event] = append(events[event], callback)
+	found := false
+	for _, cb := range events[event] {
+		if cb == callback {
+			found = true
+			break
+		}
+	}
+	if !found {
+		events[event] = append(events[event], callback)
+	}
+
 	mutex.Unlock()
 
 	return nil
@@ -158,6 +168,8 @@ func Off(name string, callback *Callback) error {
 
 	mutex.Unlock()
 
+	mutex.RLock()
+	defer mutex.RUnlock()
 	if len(events) == 0 {
 		close(pipe)
 		pipe = nil // will stop the go routine

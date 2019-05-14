@@ -3,13 +3,13 @@ package profile
 import (
 	"errors"
 
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/fatih/structs"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
 )
 
 // NewGattDescriptor1 create a new GattDescriptor1 client
-func NewGattDescriptor1(path string) *GattDescriptor1 {
+func NewGattDescriptor1(path string) (*GattDescriptor1, error) {
 	a := new(GattDescriptor1)
 	a.client = bluez.NewClient(
 		&bluez.Config{
@@ -20,8 +20,8 @@ func NewGattDescriptor1(path string) *GattDescriptor1 {
 		},
 	)
 	a.Properties = new(GattDescriptor1Properties)
-	a.GetProperties()
-	return a
+	_, err := a.GetProperties()
+	return a, err
 }
 
 // GattDescriptor1 client
@@ -32,7 +32,7 @@ type GattDescriptor1 struct {
 
 // GattDescriptor1Properties exposed properties for GattDescriptor1
 type GattDescriptor1Properties struct {
-	Value          []byte
+	Value          []byte `dbus:"emit"`
 	Characteristic dbus.ObjectPath
 	UUID           string
 	Flags          []string
@@ -57,8 +57,8 @@ func (d *GattDescriptor1) Register() (chan *dbus.Signal, error) {
 }
 
 //Unregister for changes signalling
-func (d *GattDescriptor1) Unregister() error {
-	return d.client.Unregister(d.client.Config.Path, bluez.PropertiesInterface)
+func (d *GattDescriptor1) Unregister(signal chan *dbus.Signal) error {
+	return d.client.Unregister(d.client.Config.Path, bluez.PropertiesInterface, signal)
 }
 
 //GetProperties load all available properties

@@ -1,8 +1,8 @@
 package profile
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
 )
 
 // NewProfileManager1 create a new ProfileManager1 client

@@ -1,91 +1,94 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/bluez"
-	"github.com/muka/go-bluetooth/bluez/profile"
-	"github.com/muka/go-bluetooth/linux"
-	"github.com/muka/go-bluetooth/service"
+	"fmt"
+
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/service"
+	log "github.com/sirupsen/logrus"
 )
 
-func setupAdapter(aid string) error {
-
-	btmgmt := linux.NewBtMgmt(aid)
-
-	// turn off
-	err := btmgmt.SetPowered(false)
-	if err != nil {
-		return err
-	}
-
-	err = btmgmt.SetName(appName)
-	if err != nil {
-		return err
-	}
-
-	err = btmgmt.SetAdvertising(true)
-	if err != nil {
-		return err
-	}
-
-	err = btmgmt.SetLe(true)
-	if err != nil {
-		return err
-	}
-
-	err = btmgmt.SetConnectable(true)
-	if err != nil {
-		return err
-	}
-
-	err = btmgmt.SetConnectable(true)
-	if err != nil {
-		return err
-	}
-
-	// turn on
-	err = btmgmt.SetPowered(true)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func registerApplication() error {
-
-	err := setupAdapter(adapterID)
-	if err != nil {
-		log.Errorf("Failed to setup adapter: %s", err.Error())
-		return err
-	}
+func registerApplication(adapterID string) (*service.Application, error) {
 
 	cfg := &service.ApplicationConfig{
 		UUIDSuffix: "-0000-1000-8000-00805F9B34FB",
 		UUID:       "1234",
 		ObjectName: objectName,
 		ObjectPath: objectPath,
+		LocalName:  "GoBleSrvc",
 	}
 	app, err := service.NewApplication(cfg)
 	if err != nil {
 		log.Errorf("Failed to initialize app: %s", err.Error())
-		return err
+		return nil, err
 	}
 
 	err = app.Run()
 	if err != nil {
 		log.Errorf("Failed to run: %s", err.Error())
-		return err
+		return nil, err
 	}
+
+	err = exposeService(
+		app,
+		app.GenerateUUID("1111"),
+		app.GenerateUUID("1111"),
+		app.GenerateUUID("1111"),
+		true,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = exposeService(
+		app,
+		app.GenerateUUID("2222"),
+		app.GenerateUUID("2222"),
+		app.GenerateUUID("2222"),
+		false,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Info("Application started, waiting for connections")
+
+	//Register Application
+	gattManager, err := api.GetGattManager(adapterID)
+	if err != nil {
+		return nil, fmt.Errorf("GetGattManager: %s", err)
+	}
+
+	err = gattManager.RegisterApplication(app.Path(), map[string]interface{}{})
+	if err != nil {
+		return nil, fmt.Errorf("RegisterApplication: %s", err.Error())
+	}
+
+	// Register our advertisement
+	err = app.StartAdvertising(adapterID)
+	if err != nil {
+		return nil, fmt.Errorf("StartAdvertising: %s", err)
+	}
+
+	log.Info("Application registered and advertising.")
+	return app, nil
+}
+
+func exposeService(
+	app *service.Application,
+	serviceUUID, characteristicUUID, descriptorUUID string,
+	advertise bool,
+) error {
 
 	serviceProps := &profile.GattService1Properties{
 		Primary: true,
-		UUID:    app.GenerateUUID("2233"),
+		UUID:    serviceUUID,
 	}
 
-	service1, err := app.CreateService(serviceProps)
+	// Set this service to be advertised
+	service1, err := app.CreateService(serviceProps, advertise)
 	if err != nil {
 		log.Errorf("Failed to create service: %s", err.Error())
 		return err
@@ -98,7 +101,7 @@ func registerApplication() error {
 	}
 
 	charProps := &profile.GattCharacteristic1Properties{
-		UUID: app.GenerateUUID("3344"),
+		UUID: characteristicUUID,
 		Flags: []string{
 			bluez.FlagCharacteristicRead,
 			bluez.FlagCharacteristicWrite,
@@ -117,7 +120,7 @@ func registerApplication() error {
 	}
 
 	descProps := &profile.GattDescriptor1Properties{
-		UUID: app.GenerateUUID("4455"),
+		UUID: descriptorUUID,
 		Flags: []string{
 			bluez.FlagDescriptorRead,
 			bluez.FlagDescriptorWrite,
@@ -135,28 +138,5 @@ func registerApplication() error {
 		return err
 	}
 
-	log.Info("Application started, waiting for connections")
-
-	//Register Application
-	gattManager, err := api.GetGattManager(adapterID)
-	if err != nil {
-		log.Errorf("Failed to get GattManager1: %s", err.Error())
-		return err
-	}
-
-	err = gattManager.RegisterApplication(app.Path(), map[string]interface{}{})
-	if err != nil {
-		log.Errorf("Failed to register application: %s", err.Error())
-		return err
-	}
-
-	adapter := profile.NewAdapter1(adapterID)
-	err = adapter.SetProperty("Discoverable", dbus.MakeVariant(true))
-	if err != nil {
-		log.Errorf("Failed to set adapter %s discoverable: %s", adapterID, err.Error())
-		return err
-	}
-
-	log.Info("Application registered.")
 	return nil
 }

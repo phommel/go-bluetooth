@@ -1,13 +1,13 @@
 package profile
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/fatih/structs"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
 )
 
 // NewGattService1 create a new GattService1 client
-func NewGattService1(path string, name string) *GattService1 {
+func NewGattService1(path string, name string) (*GattService1, error) {
 	a := new(GattService1)
 	a.client = bluez.NewClient(
 		&bluez.Config{
@@ -18,8 +18,8 @@ func NewGattService1(path string, name string) *GattService1 {
 		},
 	)
 	a.Properties = new(GattService1Properties)
-	a.GetProperties()
-	return a
+	_, err := a.GetProperties()
+	return a, err
 }
 
 // GattService1 client
@@ -34,6 +34,7 @@ type GattService1Properties struct {
 	Device          dbus.ObjectPath
 	Characteristics []dbus.ObjectPath `dbus:"emit"`
 	UUID            string
+	//Includes        []dbus.ObjectPath `dbus:"emit"`
 }
 
 //ToMap serialize a properties struct to a map
@@ -67,8 +68,8 @@ func (d *GattService1) Register() (chan *dbus.Signal, error) {
 }
 
 //Unregister for changes signalling
-func (d *GattService1) Unregister() error {
-	return d.client.Unregister(d.client.Config.Path, bluez.PropertiesInterface)
+func (d *GattService1) Unregister(signal chan *dbus.Signal) error {
+	return d.client.Unregister(d.client.Config.Path, bluez.PropertiesInterface, signal)
 }
 
 //GetProperties load all available properties

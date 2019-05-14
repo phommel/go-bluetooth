@@ -1,8 +1,10 @@
 package profile
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
+	"sync"
+
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
 )
 
 // NewDevice1 create a new Device1 client
@@ -29,6 +31,7 @@ type Device1 struct {
 
 // Device1Properties exposed properties for Device1
 type Device1Properties struct {
+	Lock             sync.RWMutex
 	AdvertisingFlags []byte
 	UUIDs            []string
 	Blocked          bool
@@ -63,13 +66,15 @@ func (d *Device1) Register() (chan *dbus.Signal, error) {
 }
 
 //Unregister for changes signalling
-func (d *Device1) Unregister() error {
-	return d.client.Unregister(d.client.Config.Path, bluez.PropertiesInterface)
+func (d *Device1) Unregister(signal chan *dbus.Signal) error {
+	return d.client.Unregister(d.client.Config.Path, bluez.PropertiesInterface, signal)
 }
 
 //GetProperties load all available properties
 func (d *Device1) GetProperties() (*Device1Properties, error) {
+	d.Properties.Lock.Lock()
 	err := d.client.GetProperties(d.Properties)
+	d.Properties.Lock.Unlock()
 	return d.Properties, err
 }
 
@@ -78,9 +83,14 @@ func (d *Device1) GetProperty(name string) (dbus.Variant, error) {
 	return d.client.GetProperty(name)
 }
 
+//SetProperty set a property
+func (d *Device1) SetProperty(name string, v interface{}) error {
+	return d.client.SetProperty(name, v)
+}
+
 //CancelParing stop the pairing process
-func (d *Device1) CancelParing() error {
-	return d.client.Call("CancelParing", 0).Store()
+func (d *Device1) CancelPairing() error {
+	return d.client.Call("CancelPairing", 0).Store()
 }
 
 //Connect to the device

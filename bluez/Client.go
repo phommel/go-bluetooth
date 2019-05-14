@@ -1,8 +1,8 @@
 package bluez
 
 import (
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/util"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/util"
 )
 
 // NewClient create a new client
@@ -79,7 +79,7 @@ func (c *Client) SetProperty(p string, v interface{}) error {
 			return err
 		}
 	}
-	return c.dbusObject.Call("org.freedesktop.DBus.Properties.Set", 0, c.Config.Iface, p, v).Store()
+	return c.dbusObject.Call("org.freedesktop.DBus.Properties.Set", 0, c.Config.Iface, p, dbus.MakeVariant(v)).Store()
 }
 
 //GetProperties load all the properties for an interface
@@ -125,7 +125,7 @@ func (c *Client) Register(path string, iface string) (chan *dbus.Signal, error) 
 }
 
 //Unregister for signals
-func (c *Client) Unregister(path string, iface string) error {
+func (c *Client) Unregister(path string, iface string, signal chan *dbus.Signal) error {
 	if !c.isConnected() {
 		err := c.Connect()
 		if err != nil {
@@ -134,6 +134,9 @@ func (c *Client) Unregister(path string, iface string) error {
 	}
 	matchstr := getMatchString(path, iface)
 	c.conn.BusObject().Call("org.freedesktop.DBus.RemoveMatch", 0, matchstr)
+	if signal != nil {
+		c.conn.RemoveSignal(signal)
+	}
 
 	return nil
 }

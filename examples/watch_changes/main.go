@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/emitter"
-	"github.com/muka/go-bluetooth/linux"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/linux"
+	log "github.com/sirupsen/logrus"
 )
 
 var adapterID = "hci0"
@@ -70,7 +70,7 @@ func discoverDevice() error {
 	defer api.Exit()
 
 	log.Debugf("Reset bluetooth device")
-	err := linux.NewBtMgmt(adapterID).Reset()
+	err := btmgmt.NewBtMgmt(adapterID).Reset()
 	if err != nil {
 		return err
 	}

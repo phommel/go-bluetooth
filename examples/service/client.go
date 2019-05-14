@@ -1,26 +1,22 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/bluez/profile"
-	"github.com/muka/go-bluetooth/emitter"
-	"github.com/muka/go-bluetooth/linux"
+	"errors"
+	"fmt"
+	"strings"
+
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/api"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez/profile"
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/emitter"
+	log "github.com/sirupsen/logrus"
 )
 
-func createClient(adapterID, name, path string) error {
+func createClient(adapterID, hwaddr, serviceID string) (err error) {
 
-	log.Info("Discovering devices")
+	log.Infof("Discovering devices from %s, looking for %s (serviceID:%s)", adapterID, hwaddr, serviceID)
 
-	btmgmt := linux.NewBtMgmt(adapterID)
+	adapter := profile.NewAdapter1(adapterID)
 
-	// turn off/on
-	err := btmgmt.Reset()
-	if err != nil {
-		return err
-	}
-
-	adapter := profile.NewAdapter1(clientAdapterID)
 	err = adapter.StartDiscovery()
 	if err != nil {
 		log.Errorf("Failed to start discovery: %s", err.Error())
@@ -28,38 +24,77 @@ func createClient(adapterID, name, path string) error {
 	}
 
 	devices, err := api.GetDevices()
-	if err != nil {
-		return err
+	fail("GetDevices", err)
+	for _, dev := range devices {
+		err = showDeviceInfo(dev, hwaddr, serviceID)
+		fail("showDeviceInfo", err)
 	}
 
-	for _, d := range devices {
-		err = adapter.RemoveDevice(d.Path)
-		if err != nil {
-			log.Warnf("Cannot remove %s : %s", d.Path, err.Error())
-		}
-	}
-
-	log.Infof("Start discovery..")
 	err = api.On("discovery", emitter.NewCallback(func(ev emitter.Event) {
-
 		discoveryEvent := ev.GetData().(api.DiscoveredDeviceEvent)
 		if discoveryEvent.Status == api.DeviceAdded {
-			showDeviceInfo(discoveryEvent.Device)
+			err = showDeviceInfo(discoveryEvent.Device, hwaddr, serviceID)
+			fail("showDeviceInfo", err)
 		}
-
 	}))
 
 	return err
 }
 
-func showDeviceInfo(dev *api.Device) {
+func showDeviceInfo(dev *api.Device, hwaddr, serviceID string) error {
+
 	if dev == nil {
-		return
+		return errors.New("Device is nil")
 	}
+
 	props, err := dev.GetProperties()
 	if err != nil {
-		log.Errorf("%s: Failed to get properties: %s", dev.Path, err.Error())
-		return
+		return fmt.Errorf("%s: Failed to get properties: %s", dev.Path, err.Error())
 	}
-	log.Infof("name=%s addr=%s rssi=%d", props.Name, props.Address, props.RSSI)
+
+	if strings.ToLower(hwaddr) != strings.ToLower(props.Address) {
+		// log.Debugf("Skip device name=%s addr=%s rssi=%d", props.Name, props.Address, props.RSSI)
+		return nil
+	}
+
+	serviceID = strings.ToLower(serviceID)
+
+	log.Infof("Found device name=%s addr=%s rssi=%d", props.Name, props.Address, props.RSSI)
+
+	var found bool
+	for _, uuid := range props.UUIDs {
+		if strings.ToLower(uuid) == serviceID {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("Service UUID %s not found on %s", serviceID, hwaddr)
+	}
+
+	if !props.Paired {
+		log.Debugf("Pairing to %s...", props.Name)
+		err = dev.Pair()
+		if err != nil {
+			return fmt.Errorf("Pair: %s", err)
+		}
+	}
+
+	log.Debugf("Connecting to %s...", props.Name)
+	err = dev.Connect()
+	if err != nil {
+		return fmt.Errorf("Connect: %s", err)
+	}
+
+	log.Infof("Found UUID %s", serviceID)
+
+	chars, err := dev.GetCharsList()
+	if err != nil {
+		return fmt.Errorf("Service UUID %s not found on %s", serviceID, hwaddr)
+	}
+
+	log.Infof("CHARS %++v", chars)
+
+	return nil
 }

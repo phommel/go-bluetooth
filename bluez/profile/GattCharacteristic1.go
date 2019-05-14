@@ -3,9 +3,9 @@ package profile
 import (
 	"errors"
 
+	"git.enexoma.de/r/smartcontrol/libraries/go-bluetooth.git/bluez"
 	"github.com/fatih/structs"
 	"github.com/godbus/dbus"
-	"github.com/muka/go-bluetooth/bluez"
 )
 
 // NewGattCharacteristic1 create a new GattCharacteristic1 client
@@ -41,7 +41,7 @@ type GattCharacteristic1 struct {
 
 // GattCharacteristic1Properties exposed properties for GattCharacteristic1
 type GattCharacteristic1Properties struct {
-	Value          []byte
+	Value          []byte `dbus:"emit"`
 	Notifying      bool
 	NotifyAcquired bool
 	WriteAcquired  bool
@@ -57,7 +57,7 @@ func (d *GattCharacteristic1Properties) ToMap() (map[string]interface{}, error) 
 		return nil, errors.New("GattCharacteristic1Properties: Service ObjectPath is not valid")
 	}
 	for i := 0; i < len(d.Descriptors); i++ {
-		if d.Descriptors[i].IsValid() {
+		if !d.Descriptors[i].IsValid() {
 			return nil, errors.New("GattCharacteristic1Properties: Descriptors contains an ObjectPath that is not valid")
 		}
 	}
@@ -82,11 +82,11 @@ func (d *GattCharacteristic1) Register() (chan *dbus.Signal, error) {
 }
 
 //Unregister for changes signalling
-func (d *GattCharacteristic1) Unregister() error {
+func (d *GattCharacteristic1) Unregister(signal chan *dbus.Signal) error {
 	if d.channel != nil {
 		close(d.channel)
 	}
-	return d.client.Unregister(d.client.Config.Path, bluez.PropertiesInterface)
+	return d.client.Unregister(d.client.Config.Path, bluez.PropertiesInterface, signal)
 }
 
 //GetProperties load all available properties
@@ -136,9 +136,9 @@ func (d *GattCharacteristic1) AcquireWrite() (dbus.UnixFD, uint16, error) {
 }
 
 //AcquireNotify acquire file descriptor and MTU for notify [experimental]
-func (d *GattCharacteristic1) AcquireNotify() (dbus.UnixFD, uint16, error) {
+func (d *GattCharacteristic1) AcquireNotify(options map[string]dbus.Variant) (dbus.UnixFD, uint16, error) {
 	var fd dbus.UnixFD
 	var mtu uint16
-	err := d.client.Call("AcquireNotify", 0).Store(&fd, &mtu)
+	err := d.client.Call("AcquireNotify", 0, options).Store(&fd, &mtu)
 	return fd, mtu, err
 }
