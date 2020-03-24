@@ -15,9 +15,9 @@ import (
 	"os"
 	"time"
 
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/api"
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/devices"
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/emitter"
+	"github.com/phommel/go-bluetooth/api"
+	"github.com/phommel/go-bluetooth/devices"
+	"github.com/phommel/go-bluetooth/emitter"
 	log "github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )

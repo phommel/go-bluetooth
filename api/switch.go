@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strconv"
 
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/linux"
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/linux/hciconfig"
+	"github.com/phommel/go-bluetooth/linux"
+	"github.com/phommel/go-bluetooth/linux/hciconfig"
 )
 
 var rfclass = [...]string{

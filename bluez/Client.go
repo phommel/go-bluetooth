@@ -1,7 +1,7 @@
 package bluez
 
 import (
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/util"
+	"github.com/phommel/go-bluetooth/util"
 	"github.com/godbus/dbus"
 )
 

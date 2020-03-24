@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/godbus/dbus"
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/api"
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez/profile"
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/linux/btmgmt"
+	"github.com/phommel/go-bluetooth/api"
+	"github.com/phommel/go-bluetooth/bluez/profile"
+	"github.com/phommel/go-bluetooth/linux/btmgmt"
 	log "github.com/sirupsen/logrus"
 )
 

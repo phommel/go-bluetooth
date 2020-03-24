@@ -1,7 +1,7 @@
 package profile
 
 import (
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
+	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/godbus/dbus"
 )
 

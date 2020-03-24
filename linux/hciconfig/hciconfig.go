@@ -3,7 +3,7 @@ package hciconfig
 import (
 	"strings"
 
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/linux"
+	"github.com/phommel/go-bluetooth/linux"
 )
 
 // NewHCIConfig initialize a new HCIConfig

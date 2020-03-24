@@ -5,9 +5,9 @@ import (
 
 	"github.com/godbus/dbus"
 
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez/profile"
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/emitter"
+	"github.com/phommel/go-bluetooth/bluez"
+	"github.com/phommel/go-bluetooth/bluez/profile"
+	"github.com/phommel/go-bluetooth/emitter"
 )
 
 //Exit performs a clean exit

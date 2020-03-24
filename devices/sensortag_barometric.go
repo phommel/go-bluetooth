@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez/profile"
 	"github.com/godbus/dbus"
+	"github.com/phommel/go-bluetooth/bluez"
+	"github.com/phommel/go-bluetooth/bluez/profile"
 )
 
 //getting config,data,period characteristics for BAROMETRIC sensor

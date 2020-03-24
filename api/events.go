@@ -1,6 +1,6 @@
 package api
 
-import "gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez/profile"
+import "github.com/phommel/go-bluetooth/bluez/profile"
 
 //EventStatus indicate the status related to an event
 type EventStatus int

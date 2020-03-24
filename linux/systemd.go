@@ -3,7 +3,7 @@ package linux
 import (
 	"errors"
 
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
+	"github.com/phommel/go-bluetooth/bluez"
 	sddbus "github.com/coreos/go-systemd/dbus"
 	"github.com/godbus/dbus"
 )

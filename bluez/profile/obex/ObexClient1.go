@@ -1,7 +1,7 @@
 package obex
 
 import (
-	"gitlab.intern-enexoma.de/homeserver/libraries/go-bluetooth.git/bluez"
+	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/godbus/dbus"
 	log "github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
