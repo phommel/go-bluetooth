@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/godbus/dbus"
+	log "github.com/sirupsen/logrus"
 )
 
 //Properties dbus serializable struct
@@ -16,6 +17,8 @@ import (
 // - callback: a callable function in the struct compatible with the signature of Prop.Callback. Omit for no callback
 type Properties interface {
 	ToMap() (map[string]interface{}, error)
+	Lock()
+	Unlock()
 }
 
 //BusType a type of DBus connection
@@ -34,8 +37,22 @@ var conns = make([]*dbus.Conn, 2)
 type Config struct {
 	Name  string
 	Iface string
-	Path  string
+	Path  dbus.ObjectPath
 	Bus   BusType
+}
+
+// CloseConnections close all open connection to DBus
+func CloseConnections() (err error) {
+	for _, conn := range conns {
+		if conn != nil {
+			err = conn.Close()
+			if err != nil {
+				log.Warnf("Close: %s", err)
+			}
+		}
+	}
+	conns = make([]*dbus.Conn, 2)
+	return err
 }
 
 //GetConnection get a DBus connection

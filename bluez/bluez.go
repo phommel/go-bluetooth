@@ -3,21 +3,8 @@ package bluez
 import "github.com/godbus/dbus/introspect"
 
 const (
+	OrgBluezPath      = "/org/bluez"
 	OrgBluezInterface = "org.bluez"
-	//Device1Interface the bluez interface for Device1
-	Device1Interface = "org.bluez.Device1"
-	//Adapter1Interface the bluez interface for Adapter1
-	Adapter1Interface = "org.bluez.Adapter1"
-	//GattService1Interface the bluez interface for GattService1
-	GattService1Interface = "org.bluez.GattService1"
-	//GattCharacteristic1Interface the bluez interface for GattCharacteristic1
-	GattCharacteristic1Interface = "org.bluez.GattCharacteristic1"
-	//GattDescriptor1Interface the bluez interface for GattDescriptor1
-	GattDescriptor1Interface = "org.bluez.GattDescriptor1"
-	//LEAdvertisement1Interface the bluez interface for LEAdvertisement1
-	LEAdvertisement1Interface = "org.bluez.LEAdvertisement1"
-	// Agent1Interface the bluez interface for Agent1
-	Agent1Interface = "org.bluez.Agent1"
 
 	//ObjectManagerInterface the dbus object manager interface
 	ObjectManagerInterface = "org.freedesktop.DBus.ObjectManager"
@@ -30,6 +17,9 @@ const (
 	PropertiesInterface = "org.freedesktop.DBus.Properties"
 	//PropertiesChanged the DBus properties interface and member
 	PropertiesChanged = "org.freedesktop.DBus.Properties.PropertiesChanged"
+
+	// Introspectable introspectable interface
+	Introspectable = "org.freedesktop.DBus.Introspectable"
 )
 
 // ObjectManagerIntrospectDataString introspect ObjectManager description
@@ -92,37 +82,3 @@ var ObjectManagerIntrospectData = introspect.Interface{
 		},
 	},
 }
-
-// Defines how the characteristic value can be used. See
-// Core spec "Table 3.5: Characteristic Properties bit
-// field", and "Table 3.8: Characteristic Extended
-// Properties bit field"
-const (
-	FlagCharacteristicBroadcast                 = "broadcast"
-	FlagCharacteristicRead                      = "read"
-	FlagCharacteristicWriteWithoutResponse      = "write-without-response"
-	FlagCharacteristicWrite                     = "write"
-	FlagCharacteristicNotify                    = "notify"
-	FlagCharacteristicIndicate                  = "indicate"
-	FlagCharacteristicAuthenticatedSignedWrites = "authenticated-signed-writes"
-	FlagCharacteristicReliableWrite             = "reliable-write"
-	FlagCharacteristicWritableAuxiliaries       = "writable-auxiliaries"
-	FlagCharacteristicEncryptRead               = "encrypt-read"
-	FlagCharacteristicEncryptWrite              = "encrypt-write"
-	FlagCharacteristicEncryptAuthenticatedRead  = "encrypt-authenticated-read"
-	FlagCharacteristicEncryptAuthenticatedWrite = "encrypt-authenticated-write"
-	FlagCharacteristicSecureRead                = "secure-read"
-	FlagCharacteristicSecureWrite               = "secure-write"
-)
-
-// Descriptor specific flags
-const (
-	FlagDescriptorRead                      = "read"
-	FlagDescriptorWrite                     = "write"
-	FlagDescriptorEncryptRead               = "encrypt-read"
-	FlagDescriptorEncryptWrite              = "encrypt-write"
-	FlagDescriptorEncryptAuthenticatedRead  = "encrypt-authenticated-read"
-	FlagDescriptorEncryptAuthenticatedWrite = "encrypt-authenticated-write"
-	FlagDescriptorSecureRead                = "secure-read"
-	FlagDescriptorSecureWrite               = "secure-write"
-)

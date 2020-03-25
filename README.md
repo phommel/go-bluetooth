@@ -1,82 +1,84 @@
 # go-bluetooth
 
-Golang bluetooth client based on bluez DBus interfaces
+Go bluetooth API for Bluez DBus interface.
 
-See here for reference https://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc
+[![GoDoc](https://godoc.org/github.com/muka/go-bluetooth?status.svg)](https://godoc.org/github.com/muka/go-bluetooth)
+
+<img align="center" width="240" src="./gopher.png">
+
+## Usage
+
+1. Build the binary
+
+  `cd $GOPATH/src/github.com/muka/go-bluetooth && make build`
+
+2. Run the examples eg.
+
+  `go-bluetooth discovery`
+
+The `examples/` folder offer an API overview.
 
 ## Features
 
-The features implemented are
+The library offers a wrapper to Bluez DBus API and some high level API to ease the interaction.
 
-- [x] Discovery
-- [x] Adapter support
-- [x] Device support (SensorTag example)
-- [x] GATT Service and characteristics interface
-- [x] Adapter on/off via `rfkill`
-- [x] Handle systemd `bluetooth.service` unit
-- [x] Expose `hciconfig` basic API
-- [x] Expose bluetooth services via bluez GATT API
-- [x] Basic pairing support
+High level features supported:
 
-## Examples
-
-The `examples/` folder offer an overview of library
-
-- `agent` a simple agent to support pairing
-- `btmgmt` interface to CLI btmgmt
-- `discovery` find devices around
-- `hci_updown` HCI based communication example
-- `obex_push` send file to a device
-- `sensortag_info` Obtain data from a TI SensorTag
-- `sensortag_temperature` Obtain temperature from a TI SensorTag
-- `service` expose a bluetooth device with corresponding services
-- `show_miband_info` show informations for MiBand2
-- `watch_changes` register for notifications from a TI SensorTag
-
-**Note** Ensure to install proper dbus rules on the system. For a dev setup use
-
-```
-sudo ln -s `pwd`/scripts/dbus-go-bluetooth-service.conf /etc/dbus-1/system.d/
-sudo ln -s `pwd`/scripts/dbus-go-bluetooth-dev.conf /etc/dbus-1/system.d/
-```
-
+- [x] Client code generation from bluez documentation
+- [x] Shell wrappers for `rfkill`, `btmgmt`, `hciconfig`, `hcitool`
+- [x] An `hci` basic API (from a fork of [go-ble/ble](https://github.com/muka/ble))
+- [x] Expose bluetooth service from go code
+- [x] Pairing and authentication support (via agent)
+- [x] Basic beaconing (iBeacon and Eddystone)
 
 ## Setup
 
-The library has been tested with
+The go Bluez API is generated from the documentation, run `make gen` to re-generate go sources. There is also a commodity bluez JSON file available in the root folder for reference.
 
-- golang `1.11.4` (starting from `v1.6`)
-- bluez bluetooth `v5.50` (starting from `v5.43`)
+Code generation will not overwrite existing files, run `make gen/clean` to remove generated content.
 
-### bluez upgrade
+Generated code has `gen_` prefix. If an API file exists with the same filename but without the prefix, generation will be skipped for that API.
 
-Bluez, the linux bluetooth implementation, has introduced GATT support from `v5.43`
+**Note** Ensure to install proper dbus rules on the system. For a dev setup, you can use the library configuration as follow
 
-Ensure you are using an up to date version with `bluetoothd -v`
+```sh
+  cd $GOPATH/src/github.com/muka/go-bluetooth
+  sudo ln -s `pwd`/scripts/dbus-go-bluetooth-service.conf /etc/dbus-1/system.d/
+  sudo ln -s `pwd`/scripts/dbus-go-bluetooth-dev.conf /etc/dbus-1/system.d/
+  # Reload dbus to load new policies:
+  # via dbus
+  # dbus-send --system --type=method_call --dest=org.freedesktop.DBus / org.freedesktop.DBus.ReloadConfig
+  # via systemctl
+  systemctl reload dbus
+```
 
-See in `scripts/` how to upgrade bluez
+## Requirements
+
+The library is tested with
+
+- golang `1.11`
+- bluez bluetooth `v5.50`
 
 ### Development notes
 
--   Give access to `hciconfig` to any user (may have [security implications](https://www.insecure.ws/linux/getcap_setcap.html))
+-  Standard GATT characteristics descriptions can be found on https://www.bluetooth.com/specifications/gatt/
+
+-   Give access to `hciconfig` to any user and avoid `sudo` (may have [security implications](https://www.insecure.ws/linux/getcap_setcap.html))
 
     ```
     sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hciconfig`
     ```
-- Create a dbus profile
+- Monitor Bluetooth activity
 
-    ```sh
-    ln -s `pwd`/scripts/dbus-dev.conf /etc/dbus-1/system.d/go-bluetooth.config
-    ```
-- Monitor activity
+  `sudo btmon`
+
+- Monitor DBus activity
 
     `sudo dbus-monitor --system "type=error"`
 
-- View `bluetoothd` debug messages
+- Start `bluetoothd` with experimental features and verbose debug messages `make bluetoothd`
 
-    `sudo service bluetooth stop && sudo bluetoothd -Edn P hostname`
-
-- Enable LE advertisement (to use a single pc, you will need 2 bluetooth adapter)
+- Enable LE advertisement (on a single pc ensure to use at least 2x bluetooth adapter)
 
   ```bash
 
@@ -89,13 +91,32 @@ See in `scripts/` how to upgrade bluez
 
   ```
 
+## Contributing
+
+Feel free to open an issue and/or a PR to contribute. If you would like to help improve the library without coding directly, you can also consider to contribute by providing some hardware to test on.
+
 ## References
 
 - https://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc
 - https://www.bluetooth.com/specifications/gatt/services
 - http://events.linuxfoundation.org/sites/events/files/slides/Bluetooth%20on%20Modern%20Linux_0.pdf
 - https://github.com/nettlep/gobbledegook
+- https://dbus.freedesktop.org/doc/dbus-specification.html#type-system
+- http://processors.wiki.ti.com/images/a/a8/BLE_SensorTag_GATT_Server.pdf
+- https://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc
 
 ## License
 
-MIT License
+Copyright 2019 luca capra
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
