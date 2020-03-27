@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/muka/go-bluetooth/api/beacon"
+	"github.com/phommel/go-bluetooth/api/beacon"
 	log "github.com/sirupsen/logrus"
 )
 

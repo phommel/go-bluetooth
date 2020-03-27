@@ -3,8 +3,7 @@ package api
 
 import (
 	"github.com/phommel/go-bluetooth/bluez"
-	"errors"
-	"github.com/muka/go-bluetooth/bluez/profile/adapter"
+	"github.com/phommel/go-bluetooth/bluez/profile/adapter"
 )
 
 var adapters = map[string]*adapter.Adapter1{}

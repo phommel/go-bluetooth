@@ -1,7 +1,6 @@
 package bluez
 
 import (
-	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/godbus/dbus"
 )
 

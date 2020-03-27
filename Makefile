@@ -34,10 +34,10 @@ gen/run:
 gen: gen/run
 
 test/api:
-	sudo go test github.com/muka/go-bluetooth/api
+	sudo go test github.com/phommel/go-bluetooth/api
 
 test/linux:
-	sudo go test -v github.com/muka/go-bluetooth/linux/btmgmt
+	sudo go test -v github.com/phommel/go-bluetooth/linux/btmgmt
 
 build: gen
 	CGO_ENABLED=0 go build -o go-bluetooth ./main.go

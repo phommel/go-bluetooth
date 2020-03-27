@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/muka/go-bluetooth/hw/linux/hci"
+	"github.com/phommel/go-bluetooth/hw/linux/hci"
 	log "github.com/sirupsen/logrus"
 )
 

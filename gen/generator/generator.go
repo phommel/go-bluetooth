@@ -5,7 +5,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/muka/go-bluetooth/gen"
+	"github.com/phommel/go-bluetooth/gen"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/muka/go-bluetooth/hw/linux/btmgmt"
-	"github.com/muka/go-bluetooth/hw/linux/hci"
-	"github.com/muka/go-bluetooth/hw/linux/hciconfig"
+	"github.com/phommel/go-bluetooth/hw/linux/btmgmt"
+	"github.com/phommel/go-bluetooth/hw/linux/hci"
+	"github.com/phommel/go-bluetooth/hw/linux/hciconfig"
 	log "github.com/sirupsen/logrus"
 )
 

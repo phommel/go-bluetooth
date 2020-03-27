@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/muka/go-bluetooth/api"
-	"github.com/muka/go-bluetooth/bluez/profile/adapter"
-	"github.com/muka/go-bluetooth/bluez/profile/device"
+	"github.com/phommel/go-bluetooth/api"
+	"github.com/phommel/go-bluetooth/bluez/profile/adapter"
+	"github.com/phommel/go-bluetooth/bluez/profile/device"
 	log "github.com/sirupsen/logrus"
 )
 
