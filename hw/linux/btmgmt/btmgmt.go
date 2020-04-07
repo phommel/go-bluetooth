@@ -39,7 +39,7 @@ func GetAdapter(adapterID string) (*BtAdapter, error) {
 //GetAdapters return a list of adapters
 func GetAdapters() ([]*BtAdapter, error) {
 
-	raw, err := cmd.Exec("btmgmt", "info")
+	raw, err := cmd.ExecInteract("btmgmt", "info")
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ type BtMgmt struct {
 func (h *BtMgmt) cmd(args ...string) error {
 	cmdArgs := []string{"btmgmt", "--index", h.adapterID}
 	cmdArgs = append(cmdArgs, args...)
-	_, err := cmd.Exec(cmdArgs...)
+	_, err := cmd.ExecInteract(cmdArgs...)
 	if err != nil {
 		return err
 	}
