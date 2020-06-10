@@ -28,6 +28,11 @@ func WatchProperties(wprop WatchableClient) (chan *PropertyChanged, error) {
 	ch := make(chan *PropertyChanged)
 
 	go (func() {
+		defer func() {
+			if recover() != nil {
+				return
+			}
+		}()
 		for {
 
 			if channel == nil {
