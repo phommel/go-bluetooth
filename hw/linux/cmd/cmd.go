@@ -56,38 +56,37 @@ func ExecInteract(args ...string) (string, error) {
 
 	res := ""
 	err = nil
+
+	// stdout readline routine
+	cline := make(chan string, 1)
+	cerr := make(chan error, 1)
+	// stderr readline routine
+	cerrline := make(chan string, 1)
+
 loop:
 	for {
-		// stdout readline routine
-		cline := make(chan string, 1)
-		cerr := make(chan error, 1)
 		go func() {
 			line, err := biostdoutr.ReadString('\n')
 			if err != nil {
-				cerr <- err
+				if err.Error() != "EOF" {
+					cerr <- err
+				}
 			} else {
 				log.Trace("cmd.ExecInteract('" + baseCmd + "',...) STDOUT: " + line)
 				cline <- line
 			}
 		}()
 
-		// stderr readline routine
-		cerrline := make(chan string, 1)
 		go func() {
 			line, err := biostderrr.ReadString('\n')
 			if err != nil {
-				cerr <- err
+				if err.Error() != "EOF" {
+					cerr <- err
+				}
 			} else {
 				log.Trace("cmd.ExecInteract('" + baseCmd + "',...) STDERR: " + line)
 				cerrline <- line
 			}
-		}()
-
-		// timeout routine
-		ctimeout := make(chan bool, 1)
-		go func() {
-			time.Sleep(100 * time.Millisecond)
-			ctimeout <- true
 		}()
 
 		select {
@@ -99,10 +98,14 @@ loop:
 		case newerr := <-cerr:
 			err = newerr
 			break loop
-		case <-ctimeout:
+		case <-time.After(100 * time.Millisecond):
 			break loop
 		}
 	}
+
+	close(cline)
+	close(cerrline)
+	close(cerr)
 
 	// Sadly, this seems to be the only way to detect errors with new btmgmt exe... :(
 	if baseCmd == "btmgmt" && strings.Contains(res, "Invalid command") {
