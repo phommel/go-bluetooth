@@ -62,30 +62,42 @@ func ExecInteract(args ...string) (string, error) {
 	cerr := make(chan error, 1)
 	// stderr readline routine
 	cerrline := make(chan string, 1)
+	ended := make(chan int)
 
 loop:
 	for {
 		go func() {
 			line, err := biostdoutr.ReadString('\n')
-			if err != nil {
-				if err.Error() != "EOF" {
-					cerr <- err
+
+			select {
+			case <-ended:
+				break
+			default:
+				if err != nil {
+					if err.Error() != "EOF" {
+						cerr <- err
+					}
+				} else {
+					log.Trace("cmd.ExecInteract('" + baseCmd + "',...) STDOUT: " + line)
+					cline <- line
 				}
-			} else {
-				log.Trace("cmd.ExecInteract('" + baseCmd + "',...) STDOUT: " + line)
-				cline <- line
 			}
 		}()
 
 		go func() {
 			line, err := biostderrr.ReadString('\n')
-			if err != nil {
-				if err.Error() != "EOF" {
-					cerr <- err
+			select {
+			case <-ended:
+				break
+			default:
+				if err != nil {
+					if err.Error() != "EOF" {
+						cerr <- err
+					}
+				} else {
+					log.Trace("cmd.ExecInteract('" + baseCmd + "',...) STDERR: " + line)
+					cerrline <- line
 				}
-			} else {
-				log.Trace("cmd.ExecInteract('" + baseCmd + "',...) STDERR: " + line)
-				cerrline <- line
 			}
 		}()
 
@@ -103,9 +115,7 @@ loop:
 		}
 	}
 
-	close(cline)
-	close(cerrline)
-	close(cerr)
+	close(ended)
 
 	// Sadly, this seems to be the only way to detect errors with new btmgmt exe... :(
 	if baseCmd == "btmgmt" && strings.Contains(res, "Invalid command") {
