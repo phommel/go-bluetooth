@@ -3,7 +3,7 @@ package parser
 import (
 	"regexp"
 
-	"github.com/muka/go-bluetooth/gen/types"
+	"github.com/phommel/go-bluetooth/gen/types"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/muka/go-bluetooth/gen/override"
+	"github.com/phommel/go-bluetooth/gen/override"
 )
 
 func toType(t string) string {

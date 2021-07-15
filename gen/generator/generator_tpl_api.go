@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/muka/go-bluetooth/gen/override"
-	"github.com/muka/go-bluetooth/gen/types"
+	"github.com/phommel/go-bluetooth/gen/override"
+	"github.com/phommel/go-bluetooth/gen/types"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/phommel/go-bluetooth/gen"
-	"github.com/muka/go-bluetooth/gen/filters"
-	"github.com/muka/go-bluetooth/gen/util"
+	"github.com/phommel/go-bluetooth/gen/filters"
+	"github.com/phommel/go-bluetooth/gen/util"
 	"github.com/stretchr/testify/assert"
 )
 

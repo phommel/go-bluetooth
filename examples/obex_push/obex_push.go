@@ -17,7 +17,6 @@ import (
 	"github.com/phommel/go-bluetooth/api"
 	"github.com/phommel/go-bluetooth/bluez/profile/obex"
 	log "github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
 )
 
 var wg sync.WaitGroup

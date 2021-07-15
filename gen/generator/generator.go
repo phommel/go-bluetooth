@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/phommel/go-bluetooth/gen"
-	"github.com/muka/go-bluetooth/gen/util"
+	"github.com/phommel/go-bluetooth/gen/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/tools/imports"
 )

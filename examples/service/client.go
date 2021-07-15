@@ -9,8 +9,8 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/api"
 	"github.com/phommel/go-bluetooth/bluez/profile/adapter"
+	"github.com/phommel/go-bluetooth/bluez/profile/agent"
 	"github.com/phommel/go-bluetooth/bluez/profile/device"
-	"github.com/muka/go-bluetooth/bluez/profile/device"
 	log "github.com/sirupsen/logrus"
 )
 

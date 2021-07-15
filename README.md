@@ -42,7 +42,7 @@ go run main.go discovery
 
 1. Clone the repository
 
-  `git clone https://github.com/muka/go-bluetooth.git`
+  `git clone https://github.com/phommel/go-bluetooth.git`
 
 1. Retrieve the bluetooth API and generate GO code
 
