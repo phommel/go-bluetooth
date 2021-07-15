@@ -1,8 +1,8 @@
 package obex
 
 import (
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/bluez"
-	"github.com/godbus/dbus"
 	log "github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )

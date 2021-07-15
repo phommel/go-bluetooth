@@ -3,7 +3,7 @@ package util
 import (
 	"testing"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +17,7 @@ func TestStructToMap(t *testing.T) {
 	}{}
 
 	val1 := map[uint16][]byte{
-		0x00: []byte{0x01, 0x02, 0x03},
+		0x00: {0x01, 0x02, 0x03},
 	}
 
 	map1 := map[string]dbus.Variant{

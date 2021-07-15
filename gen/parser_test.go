@@ -4,11 +4,13 @@ import (
 	"path"
 	"testing"
 
+	"github.com/muka/go-bluetooth/gen/filters"
+	"github.com/muka/go-bluetooth/gen/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestParse(t *testing.T) {
-	api, err := Parse("../src/bluez/doc", []string{})
+	api, err := Parse("../src/bluez/doc", []filters.Filter{}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -18,7 +20,7 @@ func TestParse(t *testing.T) {
 
 func TestSerialization(t *testing.T) {
 
-	api, err := Parse("../src/bluez/doc", []string{})
+	api, err := Parse("../src/bluez/doc", []filters.Filter{}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +28,7 @@ func TestSerialization(t *testing.T) {
 	destDir := "../test/"
 	jsonFile := path.Join(destDir, "test.json")
 
-	err = Mkdir(destDir)
+	err = util.Mkdir(destDir)
 	if err != nil {
 		t.Fatal(err)
 	}

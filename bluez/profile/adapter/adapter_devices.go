@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/phommel/go-bluetooth/bluez/profile/device"
 	"github.com/phommel/go-bluetooth/util"

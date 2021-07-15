@@ -1,27 +1,36 @@
 package gen
 
 import (
-	"os/exec"
 	"strings"
 
+	"github.com/muka/go-bluetooth/gen/filters"
+	"github.com/muka/go-bluetooth/gen/parser"
+	"github.com/muka/go-bluetooth/gen/types"
+	"github.com/muka/go-bluetooth/gen/util"
 	log "github.com/sirupsen/logrus"
 )
 
 // Parse bluez DBus API docs
-func Parse(docsDir string, filters []string) (BluezAPI, error) {
-	files, err := ListFiles(docsDir)
+func Parse(docsDir string, filtersList []filters.Filter, debug bool) (BluezAPI, error) {
+	files, err := util.ListFiles(docsDir)
 	if err != nil {
 		return BluezAPI{}, err
 	}
-	apis := []ApiGroup{}
+	apis := make([]*types.ApiGroup, 0)
 	for _, file := range files {
 
 		keep := true
-		if len(filters) > 0 {
+		if len(filtersList) > 0 {
 			keep = false
-			for _, filter := range filters {
-				if strings.Contains(file, filter) {
+			for _, filter1 := range filtersList {
+				if filter1.Context != filters.FilterFile {
+					continue
+				}
+				if strings.Contains(file, filter1.Value) {
 					keep = true
+					if debug {
+						log.Debugf("[filter %s] Keep %s", filter1.Value, file)
+					}
 					break
 				}
 			}
@@ -31,7 +40,8 @@ func Parse(docsDir string, filters []string) (BluezAPI, error) {
 			continue
 		}
 
-		apiGroup, err := NewApiGroup(file)
+		apiGroupParser := parser.NewApiGroupParser(debug, filtersList)
+		apiGroup, err := apiGroupParser.Parse(file)
 		if err != nil {
 			log.Errorf("Failed to load %s, skipped", file)
 			continue
@@ -39,7 +49,7 @@ func Parse(docsDir string, filters []string) (BluezAPI, error) {
 		apis = append(apis, apiGroup)
 	}
 
-	version, err := getGitVersion(docsDir)
+	version, err := util.GetGitVersion(docsDir)
 	if err != nil {
 		log.Errorf("Failed to parse version: %s", err)
 	}
@@ -48,11 +58,4 @@ func Parse(docsDir string, filters []string) (BluezAPI, error) {
 		Version: version,
 		Api:     apis,
 	}, nil
-}
-
-func getGitVersion(docsDir string) (string, error) {
-	cmd := exec.Command("git", "describe")
-	cmd.Dir = docsDir
-	res, err := cmd.CombinedOutput()
-	return strings.Trim(string(res), " \n\r"), err
 }

@@ -3,7 +3,7 @@ package bluez
 import (
 	"reflect"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -29,10 +29,11 @@ func WatchProperties(wprop WatchableClient) (chan *PropertyChanged, error) {
 
 	go (func() {
 		defer func() {
-			if recover() != nil {
-				return
+			if err := recover(); err != nil {
+				log.Warnf("Recovering from panic in SetWatchPropertiesChannel: %s", err)
 			}
 		}()
+
 		for {
 
 			if channel == nil {
@@ -97,13 +98,19 @@ func WatchProperties(wprop WatchableClient) (chan *PropertyChanged, error) {
 }
 
 func UnwatchProperties(wprop WatchableClient, ch chan *PropertyChanged) error {
-	ch <- nil
-	close(ch)
+	defer func() {
+		if err := recover(); err != nil {
+			log.Warnf("Recovering from panic in UnwatchProperties: %s", err)
+		}
+	}()
 	if wprop.GetWatchPropertiesChannel() != nil {
+		wprop.GetWatchPropertiesChannel() <- nil
 		err := wprop.Client().Unregister(wprop.Path(), PropertiesInterface, wprop.GetWatchPropertiesChannel())
 		if err != nil {
 			return err
 		}
 	}
+	ch <- nil
+	close(ch)
 	return nil
 }

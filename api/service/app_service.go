@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/api"
 	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/phommel/go-bluetooth/bluez/profile/gatt"
@@ -11,7 +11,7 @@ import (
 )
 
 type Service struct {
-	ID         int
+	UUID       string
 	app        *App
 	path       dbus.ObjectPath
 	Properties *gatt.GattService1Properties
@@ -68,14 +68,11 @@ func (s *Service) GetChars() map[dbus.ObjectPath]*Char {
 	return s.chars
 }
 
-// Create a new characteristic
-func (s *Service) NewChar() (*Char, error) {
+// NewChar Create a new characteristic
+func (s *Service) NewChar(uuid string) (*Char, error) {
 
 	char := new(Char)
-	char.ID = s.ID + len(s.chars) + 100
-
-	serviceUUID := "%08x" + s.Properties.UUID[8:]
-	uuid := fmt.Sprintf(serviceUUID, char.ID)
+	char.UUID = s.App().GenerateUUID(uuid)
 
 	char.path = dbus.ObjectPath(
 		fmt.Sprintf("%s/char%d", s.Path(), len(s.GetChars())),
@@ -83,7 +80,7 @@ func (s *Service) NewChar() (*Char, error) {
 	char.app = s.App()
 	char.service = s
 	char.descr = make(map[dbus.ObjectPath]*Descr)
-	char.Properties = NewGattCharacteristic1Properties(uuid)
+	char.Properties = NewGattCharacteristic1Properties(char.UUID)
 
 	iprops, err := api.NewDBusProperties(s.App().DBusConn())
 	if err != nil {
@@ -103,11 +100,28 @@ func (s *Service) AddChar(char *Char) error {
 		return err
 	}
 
-	log.Tracef("Added GATT Characteristic ID=%d %s", char.ID, char.Path())
+	err = s.DBusObjectManager().AddObject(char.Path(), map[string]bluez.Properties{
+		char.Interface(): char.GetProperties(),
+	})
+	if err != nil {
+		return err
+	}
 
-	return nil
+	// update OM service rapresentation also
+	err = s.DBusObjectManager().AddObject(s.Path(), map[string]bluez.Properties{
+		s.Interface(): s.GetProperties(),
+	})
+	if err != nil {
+		return err
+	}
+
+	log.Tracef("Added GATT Characteristic UUID=%s %s", char.UUID, char.Path())
+
+	err = s.App().ExportTree()
+	return err
 }
 
+// RemoveChar remove a characteristic from the service
 func (s *Service) RemoveChar(char *Char) error {
 	// todo unregister properties
 	if _, ok := s.chars[char.Path()]; !ok {
@@ -123,6 +137,14 @@ func (s *Service) RemoveChar(char *Char) error {
 
 	// remove the char from the three
 	err := s.DBusObjectManager().RemoveObject(s.Path())
+	if err != nil {
+		return err
+	}
+
+	// update OM service rapresentation also
+	err = s.DBusObjectManager().AddObject(s.Path(), map[string]bluez.Properties{
+		s.Interface(): s.GetProperties(),
+	})
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,7 @@ package api
 import (
 	"errors"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/phommel/go-bluetooth/bluez/profile"
 	log "github.com/sirupsen/logrus"
@@ -80,18 +80,20 @@ func (o *DBusObjectManager) GetManagedObjects() (map[dbus.ObjectPath]map[string]
 			}
 		}
 	}
-
+	log.Tracef("ObjectManager.GetManagedObjects \n %v", props)
 	return props, nil
 }
 
 //AddObject add an object to the list
 func (o *DBusObjectManager) AddObject(path dbus.ObjectPath, val map[string]bluez.Properties) error {
+	log.Tracef("ObjectManager.AddObject: %s", path)
 	o.objects[path] = val
 	return o.SignalAdded(path)
 }
 
 //RemoveObject remove an object from the list
 func (o *DBusObjectManager) RemoveObject(path dbus.ObjectPath) error {
+	log.Tracef("ObjectManager.RemoveObject: %s", path)
 	if s, ok := o.objects[path]; ok {
 		delete(o.objects, path)
 		ifaces := make([]string, len(s))

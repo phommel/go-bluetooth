@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -133,12 +133,9 @@ func MapToStruct(s interface{}, m map[string]dbus.Variant) error {
 }
 
 // StructToMap converts a struct to a map[string]interface{}
-func StructToMap(s interface{}, m map[string]interface{}) error {
-
+func StructToMap(s interface{}, m map[string]interface{}) {
 	structValue := reflect.ValueOf(s).Elem()
 	for i := 0; i < structValue.NumField(); i++ {
 		m[structValue.Type().Field(i).Name] = structValue.Field(i).Interface()
 	}
-
-	return nil
 }

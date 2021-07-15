@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/fatih/structs"
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"
 	"github.com/phommel/go-bluetooth/bluez"
@@ -86,12 +86,6 @@ func (p *DBusProperties) Expose(path dbus.ObjectPath) {
 	}
 
 	p.instance = prop.New(p.conn, path, propsConfig)
-
-	// for _, v1 := range propsConfig {
-	// 	for k, v := range v1 {
-	// 		log.Tracef("Properties map: %s %++v", k, v)
-	// 	}
-	// }
 }
 
 //AddProperties add a property set
@@ -102,10 +96,6 @@ func (p *DBusProperties) AddProperties(iface string, props bluez.Properties) err
 
 //RemoveProperties remove a property set
 func (p *DBusProperties) RemoveProperties(iface string) {
-	if _, ok := p.props[iface]; ok {
-		delete(p.props, iface)
-	}
-	if _, ok := p.propsConfig[iface]; ok {
-		delete(p.propsConfig, iface)
-	}
+	delete(p.props, iface)
+	delete(p.propsConfig, iface)
 }

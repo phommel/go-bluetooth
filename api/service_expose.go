@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/introspect"
 	"github.com/godbus/dbus/prop"
 	"github.com/phommel/go-bluetooth/bluez"
@@ -54,6 +54,7 @@ func ExposeDBusService(s ExposedDBusService) (err error) {
 		return err
 	}
 
+	log.Tracef("Expose Properties interface (%s)", s.Path())
 	s.DBusProperties().Expose(s.Path())
 
 	node := &introspect.Node{
@@ -71,9 +72,8 @@ func ExposeDBusService(s ExposedDBusService) (err error) {
 		},
 	}
 
-	intrsp := introspect.NewIntrospectable(node)
 	err = conn.Export(
-		intrsp,
+		introspect.NewIntrospectable(node),
 		s.Path(),
 		"org.freedesktop.DBus.Introspectable",
 	)

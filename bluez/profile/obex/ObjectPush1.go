@@ -1,9 +1,9 @@
 package obex
 
 import (
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/phommel/go-bluetooth/util"
-	"github.com/godbus/dbus"
 )
 
 // NewObjectPush1 create a new ObjectPush1 client
@@ -49,9 +49,12 @@ func (a *ObjectPush1) SendFile(sourcefile string) (string, *ObexTransfer1Propert
 	result := make(map[string]dbus.Variant)
 	var sessionPath string
 	err := a.client.Call("SendFile", 0, sourcefile).Store(&sessionPath, &result)
+	if err != nil {
+		return "", nil, err
+	}
 
 	transportProps := new(ObexTransfer1Properties)
-	util.MapToStruct(transportProps, result)
+	err = util.MapToStruct(transportProps, result)
 
 	return sessionPath, transportProps, err
 }

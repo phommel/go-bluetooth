@@ -1,12 +1,12 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/godbus/dbus"
-	"github.com/godbus/dbus/introspect"
-	"github.com/google/uuid"
+	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/introspect"
 	"github.com/phommel/go-bluetooth/api"
 	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/phommel/go-bluetooth/bluez/profile/adapter"
@@ -16,29 +16,38 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var AppPath = "/org/bluez/%s/apps/app%d"
-
-var UseRandomUUID = false
-
-var baseUUID = "00000000-000%d-1000-8000-00805F9B34FB"
+// AppPath default app path
+var AppPath = "/%s/apps/%d"
 
 var appCounter = 0
 
-func RandomUUID() (string, error) {
-	bUUID := fmt.Sprintf(baseUUID, appCounter)
-	UUID, err := uuid.Parse(bUUID)
-	if UseRandomUUID {
-		UUID, err = uuid.NewRandom()
-	}
-	return strings.ToUpper(UUID.String()), err
+// AppOptions contains App options
+type AppOptions struct {
+	AdapterID         string
+	AgentCaps         string
+	AgentSetAsDefault bool
+	UUIDSuffix        string
+	UUID              string
 }
 
-// Initialize a new bluetooth service (app)
-func NewApp(adapterID string) (*App, error) {
+// NewApp initialize a new bluetooth service (app)
+func NewApp(options AppOptions) (*App, error) {
 
 	app := new(App)
+	if options.AdapterID == "" {
+		return nil, errors.New("options.AdapterID is required")
+	}
 
-	app.adapterID = adapterID
+	app.Options = options
+
+	if app.Options.UUIDSuffix == "" {
+		app.Options.UUIDSuffix = "-0000-1000-8000-00805F9B34FB"
+	}
+	if app.Options.UUID == "" {
+		app.Options.UUID = "1234"
+	}
+
+	app.adapterID = app.Options.AdapterID
 	app.services = make(map[dbus.ObjectPath]*Service)
 	app.path = dbus.ObjectPath(
 		fmt.Sprintf(
@@ -52,25 +61,24 @@ func NewApp(adapterID string) (*App, error) {
 		Type: advertising.AdvertisementTypePeripheral,
 	}
 
-	app.AgentCaps = agent.CapKeyboardDisplay
-	app.AgentSetAsDefault = true
+	if app.Options.AgentCaps == "" {
+		app.Options.AgentCaps = agent.CapKeyboardDisplay
+	}
 
-	appCounter += 1
+	appCounter++
 
 	return app, app.init()
 }
 
-// Wrap a bluetooth application exposing services
+// App wraps a bluetooth application exposing services
 type App struct {
-	path     dbus.ObjectPath
-	baseUUID string
+	path    dbus.ObjectPath
+	Options AppOptions
 
 	adapterID string
 	adapter   *adapter.Adapter1
 
-	agent             agent.Agent1Client
-	AgentCaps         string
-	AgentSetAsDefault bool
+	agent agent.Agent1Client
 
 	conn          *dbus.Conn
 	objectManager *api.DBusObjectManager
@@ -102,24 +110,56 @@ func (app *App) init() error {
 	}
 	app.conn = conn
 
-	_, err = conn.RequestName(
-		"org.bluez",
-		dbus.NameFlagDoNotQueue&dbus.NameFlagReplaceExisting,
-	)
-	if err != nil {
-		return err
-	}
-
 	om, err := api.NewDBusObjectManager(app.DBusConn())
 	if err != nil {
 		return err
 	}
 	app.objectManager = om
 
-	err = conn.Export(app.objectManager, app.Path(), bluez.ObjectManagerInterface)
-	if err != nil {
-		return err
+	return err
+}
+
+// GenerateUUID generate a 128bit UUID
+func (app *App) GenerateUUID(uuidVal string) string {
+	base := app.Options.UUID
+	if len(uuidVal) == 8 {
+		base = ""
 	}
+	return base + uuidVal + app.Options.UUIDSuffix
+}
+
+// GetAdapter return the adapter in use
+func (app *App) GetAdapter() *adapter.Adapter1 {
+	return app.adapter
+}
+
+// Expose children services, chars and descriptors
+func (app *App) extractChildren() (children []introspect.Node) {
+	for _, service := range app.GetServices() {
+		childPath := strings.ReplaceAll(string(service.Path()), string(app.Path())+"/", "")
+		children = append(children, introspect.Node{
+			Name: childPath,
+		})
+		// chars
+		for _, char := range service.GetChars() {
+			childPath := strings.ReplaceAll(string(char.Path()), string(app.Path())+"/", "")
+			children = append(children, introspect.Node{
+				Name: childPath,
+			})
+			// descrs
+			for _, descr := range char.GetDescr() {
+				childPath := strings.ReplaceAll(string(descr.Path()), string(app.Path())+"/", "")
+				children = append(children, introspect.Node{
+					Name: childPath,
+				})
+			}
+		}
+	}
+	return children
+}
+
+// ExportTree update introspection data
+func (app *App) ExportTree() (err error) {
 
 	node := &introspect.Node{
 		Interfaces: []introspect.Interface{
@@ -128,6 +168,7 @@ func (app *App) init() error {
 			//ObjectManager
 			bluez.ObjectManagerIntrospectData,
 		},
+		Children: app.extractChildren(),
 	}
 
 	introspectable := introspect.NewIntrospectable(node)
@@ -137,12 +178,24 @@ func (app *App) init() error {
 		"org.freedesktop.DBus.Introspectable",
 	)
 
-	return nil
+	return err
 }
 
+// Run initialize the application
 func (app *App) Run() (err error) {
 
-	err = app.ExposeAgent(app.AgentCaps, app.AgentSetAsDefault)
+	log.Tracef("Expose %s (%s)", app.Path(), bluez.ObjectManagerInterface)
+	err = app.conn.Export(app.objectManager, app.Path(), bluez.ObjectManagerInterface)
+	if err != nil {
+		return err
+	}
+
+	err = app.ExportTree()
+	if err != nil {
+		return err
+	}
+
+	err = app.ExposeAgent(app.Options.AgentCaps, app.Options.AgentSetAsDefault)
 	if err != nil {
 		return fmt.Errorf("ExposeAgent: %s", err)
 	}
@@ -155,13 +208,11 @@ func (app *App) Run() (err error) {
 
 	options := map[string]interface{}{}
 	err = gm.RegisterApplication(app.Path(), options)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
+// Close close the app
 func (app *App) Close() {
 
 	if app.agent != nil {

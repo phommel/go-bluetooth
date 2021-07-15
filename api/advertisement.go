@@ -3,19 +3,20 @@ package api
 import (
 	"fmt"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/phommel/go-bluetooth/bluez/profile/advertising"
 	log "github.com/sirupsen/logrus"
 )
 
-const baseAdvertismentPath = "/org/bluez/%s/apps/advertisement%d"
+// const baseAdvertismentPath = "/org/bluez/%s/apps/advertisement%d"
+const BaseAdvertismentPath = "/go_bluetooth/%s/advertisement/%d"
 
 var advertisingCount int = -1
 
 func nextAdvertismentPath(adapterID string) dbus.ObjectPath {
 	advertisingCount++
-	return dbus.ObjectPath(fmt.Sprintf(baseAdvertismentPath, adapterID, advertisingCount))
+	return dbus.ObjectPath(fmt.Sprintf(BaseAdvertismentPath, adapterID, advertisingCount))
 }
 
 func decreaseAdvertismentCounter() {
@@ -132,8 +133,14 @@ func ExposeAdvertisement(adapterID string, props *advertising.LEAdvertisement1Pr
 
 	cancel := func() {
 		decreaseAdvertismentCounter()
-		advManager.UnregisterAdvertisement(adv.Path())
-		a.SetProperty("Discoverable", false)
+		err := advManager.UnregisterAdvertisement(adv.Path())
+		if err != nil {
+			log.Warn(err)
+		}
+		err = a.SetProperty("Discoverable", false)
+		if err != nil {
+			log.Warn(err)
+		}
 	}
 
 	return cancel, nil

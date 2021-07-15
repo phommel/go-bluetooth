@@ -1,9 +1,21 @@
 package service
 
 import (
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	log "github.com/sirupsen/logrus"
 )
+
+// Set the Read callback, called when a client attempt to read
+func (s *Descr) OnRead(fx DescrReadCallback) *Descr {
+	s.readCallback = fx
+	return s
+}
+
+// Set the Write callback, called when a client attempt to write
+func (s *Descr) OnWrite(fx DescrWriteCallback) *Descr {
+	s.writeCallback = fx
+	return s
+}
 
 //ReadValue read a value
 func (s *Descr) ReadValue(options map[string]interface{}) ([]byte, *dbus.Error) {
@@ -40,7 +52,7 @@ func (s *Descr) WriteValue(value []byte, options map[string]interface{}) *dbus.E
 
 	// TODO update on Properties interface
 	s.Properties.Value = val
-	s.iprops.Instance().Set(s.Interface(), "Value", dbus.MakeVariant(value))
+	err := s.iprops.Instance().Set(s.Interface(), "Value", dbus.MakeVariant(value))
 
-	return nil
+	return err
 }

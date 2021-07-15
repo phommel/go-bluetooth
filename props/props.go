@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/fatih/structs"
-	"github.com/godbus/dbus"
-	"github.com/godbus/dbus/prop"
+	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/prop"
 	"github.com/phommel/go-bluetooth/bluez"
 	log "github.com/sirupsen/logrus"
 )
@@ -92,14 +92,11 @@ func ParseProperties(propertyVal bluez.Properties) map[string]*PropInfo {
 			case "emit":
 				propInfo.Emit = prop.EmitTrue
 				propInfo.Writable = true
-				break
 			case "invalidates":
 				propInfo.Emit = prop.EmitInvalidates
 				propInfo.Writable = true
-				break
 			case "writable":
 				propInfo.Writable = true
-				break
 			default:
 				t := reflect.TypeOf(propertyVal)
 				m, ok := t.MethodByName(tagKey)

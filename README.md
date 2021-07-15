@@ -1,67 +1,86 @@
+
 # go-bluetooth
 
-Go bluetooth API for Bluez DBus interface.
+Go bluetooth API for Linux-based Bluez DBus interface.
 
 [![GoDoc](https://godoc.org/github.com/phommel/go-bluetooth?status.svg)](https://godoc.org/github.com/phommel/go-bluetooth)
 
-<img align="center" width="240" src="./gopher.png">
-
-## Usage
-
-1. Build the binary
-
-  `cd $GOPATH/src/github.com/phommel/go-bluetooth && make build`
-
-2. Run the examples eg.
-
-  `go-bluetooth discovery`
-
-The `examples/` folder offer an API overview.
+<img style="float:right" align="center" width="70" src="./gopher.png">
 
 ## Features
 
-The library offers a wrapper to Bluez DBus API and some high level API to ease the interaction.
+The library is a wrapper to the Bluez DBus API and some high level API to ease the interaction.
 
 High level features supported:
 
 - [x] Client code generation from bluez documentation
 - [x] Shell wrappers for `rfkill`, `btmgmt`, `hciconfig`, `hcitool`
-- [x] An `hci` basic API (from a fork of [go-ble/ble](https://github.com/muka/ble))
-- [x] Expose bluetooth service from go code
+- [x] An `hci` socket basic API (inspired by [go-ble/ble](https://github.com/go-ble/ble))
+- [x] Expose bluetooth service from go code [*unstable*]
 - [x] Pairing and authentication support (via agent)
-- [x] Basic beaconing (iBeacon and Eddystone)
+- [x] Beaconing send & receive (iBeacon and Eddystone)
+- [x] Mesh API support (since v5.53)
 
-## Setup
+## Todo
 
-The go Bluez API is generated from the documentation, run `make gen` to re-generate go sources. There is also a commodity bluez JSON file available in the root folder for reference.
+- [ ] Generate dbus-compatible XML from documentation
+- [ ] Generate mock service to test the library against
 
-Code generation will not overwrite existing files, run `make gen/clean` to remove generated content.
+## Running examples
 
-Generated code has `gen_` prefix. If an API file exists with the same filename but without the prefix, generation will be skipped for that API.
-
-**Note** Ensure to install proper dbus rules on the system. For a dev setup, you can use the library configuration as follow
+Examples are available in `_examples` folder.
 
 ```sh
-  cd $GOPATH/src/github.com/phommel/go-bluetooth
-  sudo ln -s `pwd`/scripts/dbus-go-bluetooth-service.conf /etc/dbus-1/system.d/
-  sudo ln -s `pwd`/scripts/dbus-go-bluetooth-dev.conf /etc/dbus-1/system.d/
-  # Reload dbus to load new policies:
-  # via dbus
-  # dbus-send --system --type=method_call --dest=org.freedesktop.DBus / org.freedesktop.DBus.ReloadConfig
-  # via systemctl
-  systemctl reload dbus
+cd _examples
+go run main.go
+# print available example commands
+# Example discovery
+go run main.go discovery
 ```
+
+## Development setup
+
+1. Clone the repository
+
+  `git clone https://github.com/muka/go-bluetooth.git`
+
+1. Retrieve the bluetooth API and generate GO code
+
+  ```sh
+  make bluez/init bluez/checkout gen/clean gen/run
+  ```
+
+## Code generation
+
+The code structure follow this pattern:
+
+ - `./api` contains wrappers for the DBus Api
+ - `./bluez` contains the actual implementation, generated from the `bluez` documentation
+
+Use `make gen` to re-generate go sources. There is also a commodity bluez JSON file available in the root folder for reference.
+
+Generated code has `gen_` prefix. If an API file exists with the same filename but _without_ the prefix, generation will be skipped for that API.
 
 ## Requirements
 
 The library is tested with
 
-- golang `1.11`
-- bluez bluetooth `v5.50`
+- golang `1.14.1`
+- bluez bluetooth `v5.50`, `v5.54`
 
 ### Development notes
 
--  Standard GATT characteristics descriptions can be found on https://www.bluetooth.com/specifications/gatt/
+- Inspect a service ObjectManager
+
+  ```shell
+  dbus-send --system --print-reply --dest=go.bluetooth /hci0/apps/0 org.freedesktop.DBus.ObjectManager.GetManagedObjects
+  ```
+
+- Retrieve char properties
+
+  ```
+  dbus-send --system --print-reply --dest=go.bluetooth /hci0/apps/0/service000003e8/char0  org.freedesktop.DBus.Properties.GetAll string:org.bluez.GattCharacteristic1
+  ```
 
 -   Give access to `hciconfig` to any user and avoid `sudo` (may have [security implications](https://www.insecure.ws/linux/getcap_setcap.html))
 
@@ -91,23 +110,16 @@ The library is tested with
 
   ```
 
-## Contributing
-
-Feel free to open an issue and/or a PR to contribute. If you would like to help improve the library without coding directly, you can also consider to contribute by providing some hardware to test on.
-
 ## References
 
-- https://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc
-- https://www.bluetooth.com/specifications/gatt/services
-- http://events.linuxfoundation.org/sites/events/files/slides/Bluetooth%20on%20Modern%20Linux_0.pdf
-- https://github.com/nettlep/gobbledegook
-- https://dbus.freedesktop.org/doc/dbus-specification.html#type-system
-- http://processors.wiki.ti.com/images/a/a8/BLE_SensorTag_GATT_Server.pdf
-- https://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc
+- [Standard GATT characteristics descriptions](https://www.bluetooth.com/specifications/gatt/)
+- [bluez git](https://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc)
+- [GATT services specs](https://www.bluetooth.com/specifications/gatt/services)
+- [A C++ implementation](https://github.com/nettlep/gobbledegook)
+- [DBus specifications](https://dbus.freedesktop.org/doc/dbus-specification.html#type-system)
+- [SensorTag specs](http://processors.wiki.ti.com/images/a/a8/BLE_SensorTag_GATT_Server.pdf)
 
 ## License
-
-Copyright 2019 luca capra
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

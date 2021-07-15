@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/bluez/profile/device"
 	"github.com/phommel/go-bluetooth/bluez/profile/gatt"
 	log "github.com/sirupsen/logrus"
@@ -263,9 +263,7 @@ func newDeviceInfo(tag *SensorTag) (SensorTagDeviceInfo, error) {
 	DeviceManufacturerUUID := getDeviceInfoUUID("MANUFACTURER_NAME_UUID")
 	DeviceModelUUID := getDeviceInfoUUID("MODEL_NUMBER_UUID")
 
-	var loadChars func() (SensorTagDeviceInfo, error)
-
-	loadChars = func() (SensorTagDeviceInfo, error) {
+	loadChars := func() (SensorTagDeviceInfo, error) {
 
 		firmwareInfo, err := dev.GetCharByUUID(DeviceFirmwareUUID)
 		if err != nil {

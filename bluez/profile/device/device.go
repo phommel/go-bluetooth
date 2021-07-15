@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/phommel/go-bluetooth/bluez/profile/gatt"
 )
@@ -34,6 +34,8 @@ func (d *Device1) GetCharacteristicsList() ([]dbus.ObjectPath, error) {
 
 		spath := string(path)
 
+		// log.Debugf("%s=%s", string(d.Path()), spath)
+
 		if !strings.HasPrefix(spath, string(d.Path())) {
 			continue
 		}
@@ -43,7 +45,7 @@ func (d *Device1) GetCharacteristicsList() ([]dbus.ObjectPath, error) {
 			continue
 		}
 
-		if strings.Index(spath[charPos:], "desc") > -1 {
+		if strings.Contains(spath[charPos:], "desc") {
 			continue
 		}
 
@@ -79,7 +81,7 @@ func (d *Device1) GetDescriptorList() ([]dbus.ObjectPath, error) {
 			continue
 		}
 
-		if strings.Index(spath[charPos:], "desc") == -1 {
+		if strings.Contains(spath[charPos:], "desc") {
 			continue
 		}
 

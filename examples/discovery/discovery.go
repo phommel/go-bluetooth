@@ -3,12 +3,15 @@ package discovery_example
 
 import (
 	"context"
+	"os"
+	"os/signal"
 
 	"github.com/phommel/go-bluetooth/api"
 	"github.com/phommel/go-bluetooth/api/beacon"
 	"github.com/phommel/go-bluetooth/bluez/profile/adapter"
 	"github.com/phommel/go-bluetooth/bluez/profile/device"
 	log "github.com/sirupsen/logrus"
+	eddystone "github.com/suapapa/go_eddystone"
 )
 
 func Run(adapterID string, onlyBeacon bool) error {
@@ -55,15 +58,23 @@ func Run(adapterID string, onlyBeacon bool) error {
 
 			log.Infof("name=%s addr=%s rssi=%d", dev.Properties.Name, dev.Properties.Address, dev.Properties.RSSI)
 
-			err = handleBeacon(dev)
-			if err != nil {
-				log.Errorf("%s: %s", ev.Path, err)
-			}
+			go func(ev *adapter.DeviceDiscovered) {
+				err = handleBeacon(dev)
+				if err != nil {
+					log.Errorf("%s: %s", ev.Path, err)
+				}
+			}(ev)
 		}
 
 	}()
 
-	select {}
+	ch := make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, os.Kill) // get notified of all OS signals
+
+	sig := <-ch
+	log.Infof("Received signal [%v]; shutting down...\n", sig)
+
+	return nil
 }
 
 func handleBeacon(dev *device.Device1) error {
@@ -91,31 +102,31 @@ func handleBeacon(dev *device.Device1) error {
 	log.Debugf("Found beacon %s %s", b.Type, name)
 
 	if b.IsEddystone() {
-		eddystone := b.GetEddystone()
-		switch eddystone.Frame {
-		case beacon.EddystoneFrameUID:
+		ed := b.GetEddystone()
+		switch ed.Frame {
+		case eddystone.UID:
 			log.Debugf(
 				"Eddystone UID %s instance %s (%ddbi)",
-				eddystone.UID,
-				eddystone.InstanceUID,
-				eddystone.CalibratedTxPower,
+				ed.UID,
+				ed.InstanceUID,
+				ed.CalibratedTxPower,
 			)
 			break
-		case beacon.EddystoneFrameTLM:
+		case eddystone.TLM:
 			log.Debugf(
 				"Eddystone TLM temp:%.0f batt:%d last reboot:%d advertising pdu:%d (%ddbi)",
-				eddystone.TLMTemperature,
-				eddystone.TLMBatteryVoltage,
-				eddystone.TLMLastRebootedTime,
-				eddystone.TLMAdvertisingPDU,
-				eddystone.CalibratedTxPower,
+				ed.TLMTemperature,
+				ed.TLMBatteryVoltage,
+				ed.TLMLastRebootedTime,
+				ed.TLMAdvertisingPDU,
+				ed.CalibratedTxPower,
 			)
 			break
-		case beacon.EddystoneFrameURL:
+		case eddystone.URL:
 			log.Debugf(
 				"Eddystone URL %s (%ddbi)",
-				eddystone.URL,
-				eddystone.CalibratedTxPower,
+				ed.URL,
+				ed.CalibratedTxPower,
 			)
 			break
 		}

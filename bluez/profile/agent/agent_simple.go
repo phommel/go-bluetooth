@@ -3,19 +3,19 @@ package agent
 import (
 	"fmt"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/bluez/profile/adapter"
 	log "github.com/sirupsen/logrus"
 )
 
 var agentInstances = 0
 
-const agentBasePath = "/org/bluez/agent/simple%d"
+const AgentBasePath = "/agent/simple%d"
 const SimpleAgentPinCode = "0000"
 const SimpleAgentPassKey uint32 = 1024
 
-func nextAgentPath() dbus.ObjectPath {
-	p := dbus.ObjectPath(fmt.Sprintf(agentBasePath, agentInstances))
+func NextAgentPath() dbus.ObjectPath {
+	p := dbus.ObjectPath(fmt.Sprintf(AgentBasePath, agentInstances))
 	agentInstances += 1
 	return p
 }
@@ -23,7 +23,7 @@ func nextAgentPath() dbus.ObjectPath {
 // NewDefaultSimpleAgent return a SimpleAgent instance with default pincode and passcode
 func NewDefaultSimpleAgent() *SimpleAgent {
 	ag := &SimpleAgent{
-		path:    nextAgentPath(),
+		path:    NextAgentPath(),
 		passKey: SimpleAgentPassKey,
 		pinCode: SimpleAgentPinCode,
 	}
@@ -34,7 +34,7 @@ func NewDefaultSimpleAgent() *SimpleAgent {
 // NewSimpleAgent return a SimpleAgent instance
 func NewSimpleAgent() *SimpleAgent {
 	ag := &SimpleAgent{
-		path: nextAgentPath(),
+		path: NextAgentPath(),
 	}
 	return ag
 }

@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/phommel/go-bluetooth/api"
 	"github.com/phommel/go-bluetooth/bluez"
 	"github.com/phommel/go-bluetooth/bluez/profile/gatt"
@@ -14,7 +14,7 @@ type CharReadCallback func(c *Char, options map[string]interface{}) ([]byte, err
 type CharWriteCallback func(c *Char, value []byte) ([]byte, error)
 
 type Char struct {
-	ID      int
+	UUID    string
 	app     *App
 	service *Service
 
@@ -47,6 +47,7 @@ func (s *Char) GetProperties() bluez.Properties {
 	}
 	s.Properties.Descriptors = descr
 	s.Properties.Service = s.Service().Path()
+
 	return s.Properties
 }
 
@@ -96,20 +97,17 @@ func (s *Char) Remove() error {
 	return api.RemoveDBusService(s)
 }
 
-// Init new descr
-func (s *Char) NewDescr() (*Descr, error) {
+// NewDescr Init new descr
+func (s *Char) NewDescr(uuid string) (*Descr, error) {
 
 	descr := new(Descr)
-	descr.ID = s.ID + len(s.descr) + 10
-
-	baseUUID := "%08x" + s.Properties.UUID[8:]
-	uuid := fmt.Sprintf(baseUUID, descr.ID)
+	descr.UUID = s.App().GenerateUUID(uuid)
 
 	descr.app = s.App()
 	descr.char = s
-	descr.Properties = NewGattDescriptor1Properties(uuid)
+	descr.Properties = NewGattDescriptor1Properties(descr.UUID)
 	descr.path = dbus.ObjectPath(
-		fmt.Sprintf("%s/descr%d", s.Path(), len(s.GetDescr())),
+		fmt.Sprintf("%s/descriptor%d", s.Path(), len(s.GetDescr())),
 	)
 	iprops, err := api.NewDBusProperties(s.App().DBusConn())
 	if err != nil {
@@ -120,7 +118,7 @@ func (s *Char) NewDescr() (*Descr, error) {
 	return descr, nil
 }
 
-// Add descr to dbus
+// AddDescr Add descr to dbus
 func (s *Char) AddDescr(descr *Descr) error {
 
 	err := api.ExposeDBusService(descr)
@@ -130,31 +128,35 @@ func (s *Char) AddDescr(descr *Descr) error {
 
 	s.descr[descr.Path()] = descr
 
-	// log.Tracef("Added GATT Descriptor ID=%d %s", descr.ID, descr.Path())
+	err = s.DBusObjectManager().AddObject(descr.Path(), map[string]bluez.Properties{
+		descr.Interface(): descr.GetProperties(),
+	})
+	if err != nil {
+		return err
+	}
 
-	return nil
+	// update OM char too
+	err = s.DBusObjectManager().AddObject(s.Path(), map[string]bluez.Properties{
+		s.Interface(): s.GetProperties(),
+	})
+	if err != nil {
+		return err
+	}
+
+	log.Tracef("Added GATT Descriptor UUID=%s %s", descr.UUID, descr.Path())
+
+	err = s.App().ExportTree()
+	return err
 }
 
-// Set the Read callback, called when a client attempt to read
+// OnRead Set the Read callback, called when a client attempt to read
 func (s *Char) OnRead(fx CharReadCallback) *Char {
 	s.readCallback = fx
 	return s
 }
 
-// Set the Write callback, called when a client attempt to write
+// OnWrite Set the Write callback, called when a client attempt to write
 func (s *Char) OnWrite(fx CharWriteCallback) *Char {
 	s.writeCallback = fx
 	return s
-}
-
-// start notification session
-func (s *Char) StartNotify() *dbus.Error {
-	log.Debug("Char.StartNotify")
-	return nil
-}
-
-// stop notification session
-func (s *Char) StopNotify() *dbus.Error {
-	log.Debug("Char.StopNotify")
-	return nil
 }
